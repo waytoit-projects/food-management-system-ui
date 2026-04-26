@@ -1,0 +1,273 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Restore Old Looks (Light Theme Default) */
+  --primary: #f59e0b; 
+  --primary-hover: #d97706;
+  --bg-main: #f8f9fa; 
+  --bg-panel: #ffffff;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --border-color: #e5e7eb;
+}
+
+/* Vision UI Theme (Scoped to Dashboard) */
+.vision-theme {
+  --primary: #0075ff;
+  --primary-hover: #0066e0;
+  --bg-main: #060b26;
+  --bg-panel: rgba(6, 11, 38, 0.85);
+  --text-main: #ffffff;
+  --text-muted: #a0aec0;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(6, 11, 38, 0.8);
+  --sidebar-width: 280px;
+  color: var(--text-main);
+}
+
+/* Scoped Dark Theme for Login */
+.login-theme {
+  --primary: #f59e0b;
+  --primary-hover: #d97706;
+  --bg-main: #0f172a;
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;
+  --border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  color: var(--text-main);
+  background-color: var(--bg-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Custom Mesh Background for Vision Theme */
+.vision-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #060b26;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(31, 59, 137, 0.5) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, rgba(13, 20, 68, 0.5) 0, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(6, 11, 38, 1) 0, transparent 50%);
+  z-index: -1;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Glass Panels */
+.glass-panel {
+  background: #080a149c;
+  border-radius: 1rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.vision-theme .glass-panel {
+  background: #080a149c;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Sidebar Specific */
+.vision-sidebar {
+  background: rgba(6, 11, 38, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: none;
+  border-top: none;
+  border-bottom: none;
+  border-radius: 0 1.5rem 1.5rem 0;
+}
+
+.vision-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.875rem;
+  color: #a0aec0;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.vision-nav-item.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.vision-nav-item.active .icon-box {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 2px 10px var(--primary-shadow);
+}
+
+.icon-box {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: #1a1f37;
+  color: var(--primary);
+  transition: all 0.3s;
+}
+
+@keyframes toast-in {
+  from { transform: translateX(100%) scale(0.9); opacity: 0; }
+  to { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+/* Re-implementing old input styles for Login */
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 3rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: white;
+  outline: none;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.input-icon-image {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 0.5rem;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+..input-field.select-field {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-color);
+  color: white;
+  padding-right: 3rem;
+  background-image: linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.85) 50%), linear-gradient(135deg, rgba(255,255,255,0.85) 50%, transparent 50%);
+  background-position: calc(100% - 1rem) calc(50% - 0.05rem), calc(100% - 0.65rem) calc(50% - 0.05rem);
+  background-size: 0.4rem 0.4rem, 0.4rem 0.4rem;
+  background-repeat: no-repeat;
+}
+
+.input-field.select-field::-ms-expand {
+  display: none;
+}
+
+.input-field.select-field option {
+  background-color: rgba(8, 10, 20, 0.98);
+  color: #fff;
+}
+
+.input-field.select-field option:checked,
+.input-field.select-field option:hover,
+.input-field.select-field option:focus {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #fff;
+}
+
+.input-field.select-field:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.input-field.select-field:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+}
+
+.input-field:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+}
+
+.input-field:focus + .input-icon {
+  color: var(--primary);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 0.875rem;
+  border-radius: 0.75rem;
+  border: none;
+  background-color: var(--primary);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.vision-nav-item span {
+  white-space: nowrap;
+}
