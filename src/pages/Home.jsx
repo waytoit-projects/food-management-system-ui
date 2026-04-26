@@ -167,6 +167,25 @@ const Home = () => {
           </div>
         </div>
 
+        {/* Footer */}
+        <div style={{ 
+          marginTop: 'auto', 
+          padding: '2rem 0 1rem', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          borderTop: '1px solid rgba(255,255,255,0.05)',
+          color: '#a0aec0'
+        }}>
+          <p style={{ fontSize: '0.75rem', margin: 0, fontWeight: 600 }}>
+            Powered by <span style={{ color: 'var(--primary)', fontWeight: 800 }}>WayToIT</span>
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#48bb78' }}></div>
+            <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.05em' }}>VERSION 1.0.1</span>
+          </div>
+        </div>
+
       </div>
 
       {/* Right Sidebar (Cart / Profile) */}

@@ -1,6 +1,8 @@
+import API_BASE_URL from '../config/api';
+
 export const getHotels = async () => {
   try {
-    const res = await fetch("/api/getHotel", {
+    const res = await fetch(`${API_BASE_URL}/getHotel`, {
       method: "GET",
       headers: {
         "accept": "*/*"
@@ -30,7 +32,7 @@ export const getHotels = async () => {
 
 export const createHotel = async (hotelData) => {
   try {
-    const res = await fetch("/api/createHotel", {
+    const res = await fetch(`${API_BASE_URL}/createHotel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -53,7 +55,7 @@ export const createHotel = async (hotelData) => {
 
 export const updateHotel = async (hotelData) => {
   try {
-    const res = await fetch("/api/updateHotel", {
+    const res = await fetch(`${API_BASE_URL}/updateHotel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -76,7 +78,7 @@ export const updateHotel = async (hotelData) => {
 
 export const deleteHotel = async (hotelId) => {
   try {
-    const res = await fetch("/api/deleteHotel", {
+    const res = await fetch(`${API_BASE_URL}/deleteHotel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

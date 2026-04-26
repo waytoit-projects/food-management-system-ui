@@ -1,6 +1,8 @@
+import API_BASE_URL from '../config/api';
+
 export const createFoodItem = async (data) => {
   try {
-    const res = await fetch("/api/food-item", {
+    const res = await fetch(`${API_BASE_URL}/food-item`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -23,7 +25,7 @@ export const createFoodItem = async (data) => {
 
 export const updateFoodItem = async (data) => {
   try {
-    const res = await fetch("/api/update-food-item", {
+    const res = await fetch(`${API_BASE_URL}/update-food-item`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -46,7 +48,7 @@ export const updateFoodItem = async (data) => {
 
 export const deleteFoodItem = async (data) => {
   try {
-    const res = await fetch("/api/delete-food-item", {
+    const res = await fetch(`${API_BASE_URL}/delete-food-item`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

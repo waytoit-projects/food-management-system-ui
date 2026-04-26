@@ -192,7 +192,7 @@ body {
   border: 1px solid rgba(255,255,255,0.2);
 }
 
-..input-field.select-field {
+.input-field.select-field {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;

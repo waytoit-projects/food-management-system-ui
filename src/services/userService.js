@@ -1,6 +1,8 @@
+import API_BASE_URL from '../config/api';
+
 export const createUser = async (userData) => {
   try {
-    const res = await fetch("/api/createUser", {
+    const res = await fetch(`${API_BASE_URL}/createUser`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -23,7 +25,7 @@ export const createUser = async (userData) => {
 
 export const getUsers = async (data) => {
   try {
-    const res = await fetch("/api/getUsers", {
+    const res = await fetch(`${API_BASE_URL}/getUsers`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -46,7 +48,7 @@ export const getUsers = async (data) => {
 
 export const updateUser = async (userData) => {
   try {
-    const res = await fetch("/api/updateUser", {
+    const res = await fetch(`${API_BASE_URL}/updateUser`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -68,7 +70,7 @@ export const updateUser = async (userData) => {
 };
 export const deleteUser = async (data) => {
   try {
-    const res = await fetch("/api/deleteUser", {
+    const res = await fetch(`${API_BASE_URL}/deleteUser`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

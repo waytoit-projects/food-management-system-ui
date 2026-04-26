@@ -1,8 +1,8 @@
+import API_BASE_URL from '../config/api';
+
 export const loginApi = async (data) => {
   try {
-    // Calling the relative /api/login endpoint routes the request
-    // through the Vite Dev Server proxy, which completely avoids CORS blocks!
-    const res = await fetch("/api/login", {
+    const res = await fetch(`${API_BASE_URL}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

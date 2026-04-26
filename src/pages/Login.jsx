@@ -391,6 +391,12 @@ const Login = () => {
             {!loading && <ArrowRight size={18} />}
           </button>
         </form>
+        
+        <div style={{ marginTop: '1.5rem', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+          <p style={{ fontSize: '0.65rem', color: '#a0aec0', margin: 0, fontWeight: 600 }}>
+            Powered by <span style={{ color: 'var(--primary)', fontWeight: 800 }}>WayToIT</span>
+          </p>
+        </div>
       </div>
 
       {showRegisterModal && (

@@ -1,8 +1,8 @@
+import API_BASE_URL from '../config/api';
+
 export const getMenuItems = async () => {
   try {
-    // Using relative /api path to utilize Vite dev server proxy configured earlier.
-    // This perfectly routes to http://localhost:8080/menu-item while bypassing browser CORS blocks.
-    const res = await fetch("/api/menu-item", {
+    const res = await fetch(`${API_BASE_URL}/menu-item`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
