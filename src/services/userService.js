@@ -7,7 +7,7 @@ export const createUser = async (userData) => {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "include",
+            credentials: "include",
       body: JSON.stringify(userData)
     });
 
@@ -30,7 +30,7 @@ export const getUsers = async (data) => {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "include",
+            credentials: "include",
       body: JSON.stringify(data)
     });
 
@@ -53,7 +53,7 @@ export const updateUser = async (userData) => {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "include",
+            credentials: "include",
       body: JSON.stringify(userData)
     });
 
@@ -75,7 +75,7 @@ export const deleteUser = async (data) => {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "include",
+            credentials: "include",
       body: JSON.stringify(data)
     });
 

@@ -16,6 +16,7 @@ const Menu = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [loading, setLoading] = useState(true);
   const [isCartOpen, setIsCartOpen] = useState(true);
+  const [showSlider, setShowSlider] = useState(false);
 
   useEffect(() => {
     fetchMenu();
@@ -56,15 +57,17 @@ const Menu = () => {
   const filteredItems = useMemo(() => {
     return menuItems.filter(item => {
       const searchLower = searchQuery.toLowerCase();
+      const itemMainCategory = item.category?.mainCategory || item.mainCategory || '';
+      const itemSubCategory = item.category?.subCategory || item.subCategory || '';
       const matchesSearch = item.itemName?.toLowerCase().includes(searchLower) || 
-                            item.category?.mainCategory?.toLowerCase().includes(searchLower) ||
-                            item.category?.subCategory?.toLowerCase().includes(searchLower);
+                            itemMainCategory.toLowerCase().includes(searchLower) ||
+                            itemSubCategory.toLowerCase().includes(searchLower);
       
       let matchesCategory = true;
       if (activeCategory !== 'All') {
         if (activeCategory === 'Veg') matchesCategory = item.isVeg === true;
         else if (activeCategory === 'Non-Veg') matchesCategory = item.isVeg === false || item.isVeg === undefined;
-        else matchesCategory = item.category?.mainCategory === activeCategory;
+        else matchesCategory = itemMainCategory === activeCategory;
       }
       return matchesSearch && matchesCategory;
     });
@@ -92,16 +95,25 @@ const Menu = () => {
     });
   };
 
+  const handleClearCart = () => {
+    setCart([]);
+  };
+
   return (
     <div style={{ display: 'flex', height: '100vh', padding: '0', overflow: 'hidden' }}>
       
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '1rem 2rem 1rem 1rem' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: '1rem' }}>
         
-        <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        <Header 
+          searchQuery={searchQuery} 
+          setSearchQuery={setSearchQuery} 
+          showSlider={showSlider}
+          setShowSlider={setShowSlider}
+        />
 
         {/* Promo Slider */}
-        <Slider />
+        {showSlider && <Slider />}
 
         {/* Category Tabs */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -216,7 +228,7 @@ const Menu = () => {
           marginTop: '-1rem' // Offset parent padding
         }}>
           <div style={{ width: '320px', height: '100%' }}>
-            <CartPanel cartItems={cart} onAdd={handleAdd} onRemove={handleRemove} />
+            <CartPanel cartItems={cart} onAdd={handleAdd} onRemove={handleRemove} onClearCart={handleClearCart} />
           </div>
         </div>
       </div>

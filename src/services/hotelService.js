@@ -37,7 +37,7 @@ export const createHotel = async (hotelData) => {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "include",
+            credentials: "include",
       body: JSON.stringify(hotelData)
     });
 
@@ -60,7 +60,7 @@ export const updateHotel = async (hotelData) => {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "include",
+            credentials: "include",
       body: JSON.stringify(hotelData)
     });
 
@@ -83,7 +83,7 @@ export const deleteHotel = async (hotelId) => {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "include",
+            credentials: "include",
       body: JSON.stringify({ hotelId })
     });
 

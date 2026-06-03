@@ -10,6 +10,11 @@ import Menu from '../pages/Menu';
 import ItemManagement from '../pages/ItemManagement';
 import UserManagement from '../pages/UserManagement';
 import HotelManagement from '../pages/HotelManagement';
+import PendingOrders from '../pages/PendingOrders';
+import CompletedOrders from '../pages/CompletedOrders';
+import AllOrders from '../pages/AllOrders';
+import CancelledOrders from '../pages/CancelledOrders';
+import TakeawayOrders from '../pages/TakeawayOrders';
 
 const AppRoutes = () => {
   return (
@@ -28,6 +33,11 @@ const AppRoutes = () => {
           <Route path="/item-management" element={<ItemManagement />} />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/hotel-management" element={<HotelManagement />} />
+          <Route path="/order-management/pending" element={<PendingOrders />} />
+          <Route path="/order-management/all" element={<AllOrders />} />
+          <Route path="/order-management/completed" element={<CompletedOrders />} />
+          <Route path="/order-management/cancelled" element={<CancelledOrders />} />
+          <Route path="/order-management/takeaway" element={<TakeawayOrders />} />
         </Route>
       </Route>
 

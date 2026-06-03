@@ -44,7 +44,7 @@ const ThemeConfigurator = () => {
       <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
         {/* Sidenav Colors */}
         <div style={{ marginBottom: '2rem' }}>
-          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem' }}>Sidenav Colors</h3>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem' }}>Background</h3>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             {colors.map(color => (
               <div

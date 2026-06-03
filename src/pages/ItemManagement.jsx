@@ -246,7 +246,7 @@ const ItemManagement = () => {
   };
 
   return (
-    <div style={{ paddingRight: '1rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ padding: '1rem', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Toast Notification */}
       {message.text && (
         <div style={{
@@ -326,6 +326,24 @@ const ItemManagement = () => {
                   <div className="form-group">
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#a0aec0' }}>Food Item Name *</label>
                     <input type="text" name="itemName" value={formData.itemName} onChange={(e) => handleFormChange(e, false)} placeholder="e.g. Paneer Butter Masala" style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', outlineColor: 'var(--primary)', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white' }} />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#a0aec0' }}>Main Category *</label>
+                    <select name="mainCategory" value={formData.mainCategory} onChange={(e) => handleFormChange(e, false)} style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.1)', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', fontSize: '0.9rem' }}>
+                      <option value="Food" style={{ backgroundColor: '#1a1f37' }}>Food</option>
+                      <option value="Dishes" style={{ backgroundColor: '#1a1f37' }}>Dishes</option>
+                      <option value="Burger" style={{ backgroundColor: '#1a1f37' }}>Burger</option>
+                      <option value="Snacks" style={{ backgroundColor: '#1a1f37' }}>Snacks</option>
+                      <option value="Drink & Ice" style={{ backgroundColor: '#1a1f37' }}>Drink & Ice</option>
+                      <option value="Desserts" style={{ backgroundColor: '#1a1f37' }}>Desserts</option>
+                      <option value="Beverages" style={{ backgroundColor: '#1a1f37' }}>Beverages</option>
+                      <option value="Biryani" style={{ backgroundColor: '#1a1f37' }}>Biryani</option>
+                      <option value="Starters" style={{ backgroundColor: '#1a1f37' }}>Starters</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#a0aec0' }}>Sub Category</label>
+                    <input type="text" name="subCategory" value={formData.subCategory} onChange={(e) => handleFormChange(e, false)} placeholder="e.g. Main Course" style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white' }} />
                   </div>
                   <div className="form-group">
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#a0aec0' }}>Brand Name</label>
@@ -666,7 +684,7 @@ const ItemManagement = () => {
 
       {/* Edit Modal */}
       {isEditModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: '280px', width: 'calc(100vw - 280px)', height: '100vh', backgroundColor: 'rgba(6, 11, 38, 0.7)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1.5rem' }}>
+        <div style={{ position: 'fixed', top: 0, left: 'var(--sidebar-width)', width: 'calc(100vw - var(--sidebar-width))', height: '100vh', backgroundColor: 'var(--glass-bg)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1.5rem' }}>
           <div className="glass-panel" style={{ 
             width: '100%', maxWidth: '950px', maxHeight: '92vh', overflowY: 'auto', 
             borderRadius: '2rem', 
@@ -676,7 +694,7 @@ const ItemManagement = () => {
             <div style={{ 
               padding: '1.75rem 2.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', 
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              backgroundColor: 'rgba(6, 11, 38, 0.95)',
+              backgroundColor: 'var(--bg-panel)',
               backdropFilter: 'blur(10px)',
               position: 'sticky', top: 0, zIndex: 10, borderTopLeftRadius: '2rem', borderTopRightRadius: '2rem'
             }}>
@@ -707,6 +725,24 @@ const ItemManagement = () => {
                   <div className="form-group">
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>Food Item Name</label>
                     <input type="text" name="itemName" value={editFormData.itemName} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', outlineColor: 'var(--primary)', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white' }} />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>Main Category</label>
+                    <select name="mainCategory" value={editFormData.mainCategory} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', fontSize: '0.9rem' }}>
+                      <option value="Food" style={{ backgroundColor: '#1a1f37' }}>Food</option>
+                      <option value="Dishes" style={{ backgroundColor: '#1a1f37' }}>Dishes</option>
+                      <option value="Burger" style={{ backgroundColor: '#1a1f37' }}>Burger</option>
+                      <option value="Snacks" style={{ backgroundColor: '#1a1f37' }}>Snacks</option>
+                      <option value="Drink & Ice" style={{ backgroundColor: '#1a1f37' }}>Drink & Ice</option>
+                      <option value="Desserts" style={{ backgroundColor: '#1a1f37' }}>Desserts</option>
+                      <option value="Beverages" style={{ backgroundColor: '#1a1f37' }}>Beverages</option>
+                      <option value="Biryani" style={{ backgroundColor: '#1a1f37' }}>Biryani</option>
+                      <option value="Starters" style={{ backgroundColor: '#1a1f37' }}>Starters</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>Sub Category</label>
+                    <input type="text" name="subCategory" value={editFormData.subCategory} onChange={(e) => handleFormChange(e, true)} placeholder="e.g. Main Course" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white' }} />
                   </div>
                   <div className="form-group">
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>Brand Name</label>
@@ -817,7 +853,7 @@ const ItemManagement = () => {
               <div style={{ 
                 display: 'flex', gap: '1.25rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', 
                 paddingTop: '2rem', marginTop: '1rem', position: 'sticky', bottom: '-2.5rem', 
-                backgroundColor: 'rgba(6, 11, 38, 0.9)', paddingBottom: '0.5rem' 
+                backgroundColor: 'var(--bg-panel)', paddingBottom: '0.5rem' 
               }}>
                 <button 
                   type="submit" 
@@ -850,7 +886,7 @@ const ItemManagement = () => {
 
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: '280px', width: 'calc(100vw - 280px)', height: '100vh', backgroundColor: 'rgba(6, 11, 38, 0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+        <div style={{ position: 'fixed', top: 0, left: 'var(--sidebar-width)', width: 'calc(100vw - var(--sidebar-width))', height: '100vh', backgroundColor: 'var(--glass-bg)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
           <div className="glass-panel" style={{ 
             width: '100%', maxWidth: '400px', padding: '2rem', borderRadius: '1.5rem', 
             textAlign: 'center', position: 'relative', overflow: 'hidden'

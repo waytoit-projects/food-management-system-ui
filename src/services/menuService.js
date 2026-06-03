@@ -7,7 +7,7 @@ export const getMenuItems = async () => {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "include"
+          credentials: "include"
     });
     
     if (!res.ok) {

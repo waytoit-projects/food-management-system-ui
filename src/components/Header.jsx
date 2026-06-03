@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Search, Bell, X } from 'lucide-react';
+import { Search, Bell, X, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const Header = ({ searchQuery, setSearchQuery }) => {
+const Header = ({ searchQuery, setSearchQuery, showSlider, setShowSlider }) => {
   const { user } = useAuth();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   
@@ -20,14 +20,14 @@ const Header = ({ searchQuery, setSearchQuery }) => {
           onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
           onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
         />
-        <h1 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'white' }}>
+        <h1 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-main)' }}>
           Welcome back, <span style={{ color: 'var(--primary)' }}>{displayName}</span>
         </h1>
       </div>
       
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
         <div style={{ position: 'relative', width: '320px' }}>
-          <Search style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'white', zIndex: 10 }} size={18} />
+          <Search style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-main)', zIndex: 10 }} size={18} />
           <input 
             type="text" 
             value={searchQuery}
@@ -36,21 +36,38 @@ const Header = ({ searchQuery, setSearchQuery }) => {
             style={{ 
               width: '100%', padding: '0.75rem 1.25rem 0.75rem 3.25rem', 
               borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', 
-              backgroundColor: 'rgba(6, 11, 38, 0.5)', color: 'white',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-main)',
               outline: 'none', fontSize: '0.8rem', backdropFilter: 'blur(10px)'
             }}
           />
         </div>
         
+        {setShowSlider && (
+          <div 
+            onClick={() => setShowSlider(!showSlider)} 
+            style={{ 
+              position: 'relative', cursor: 'pointer', color: showSlider ? 'var(--primary)' : '#a0aec0', 
+              backgroundColor: 'rgba(255,255,255,0.05)', 
+              width: '42px', height: '42px', 
+              borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.1)', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.2s'
+            }}
+            title={showSlider ? "Hide Offers" : "Show Offers"}
+          >
+            {showSlider ? <Eye size={20} /> : <EyeOff size={20} />}
+          </div>
+        )}
+
         <div style={{ 
-          position: 'relative', cursor: 'pointer', color: 'white', 
+          position: 'relative', cursor: 'pointer', color: 'var(--text-main)', 
           backgroundColor: 'rgba(255,255,255,0.05)', 
           width: '42px', height: '42px', 
           borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.1)', 
           display: 'flex', alignItems: 'center', justifyContent: 'center' 
         }}>
           <Bell size={20} />
-          <span style={{ position: 'absolute', top: '10px', right: '10px', width: '8px', height: '8px', backgroundColor: '#ef4444', borderRadius: '50%', border: '2px solid #060b26' }}></span>
+          <span style={{ position: 'absolute', top: '10px', right: '10px', width: '8px', height: '8px', backgroundColor: '#ef4444', borderRadius: '50%', border: '2px solid var(--bg-main)' }}></span>
         </div>
       </div>
 
@@ -91,7 +108,7 @@ const Header = ({ searchQuery, setSearchQuery }) => {
                 objectFit: 'cover'
               }}
             />
-            <div style={{ marginTop: '1.5rem', textAlign: 'center', color: 'white' }}>
+            <div style={{ marginTop: '1.5rem', textAlign: 'center', color: 'var(--text-main)' }}>
               <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0 }}>{displayName}</h3>
               <p style={{ color: 'var(--primary)', fontWeight: 600, marginTop: '0.5rem' }}>{user?.role || 'Administrator'}</p>
             </div>

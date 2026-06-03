@@ -7,10 +7,10 @@ export default defineConfig({
     proxy: {
       // Proxy any request starting with /api to your backend
       '/api': {
-        target: 'https://waytoit-food-management-system.onrender.com',
+        target: 'http://localhost:8080',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
-        secure: true,
+        secure: false,
       }
     }
   }

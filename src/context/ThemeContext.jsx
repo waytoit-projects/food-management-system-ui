@@ -9,7 +9,7 @@ export const ThemeProvider = ({ children }) => {
   const [isSidebarMini, setIsSidebarMini] = useState(false);
   const [isConfiguratorOpen, setIsConfiguratorOpen] = useState(false);
 
-  // Apply primary color to CSS variable
+  // Apply colors to CSS variables
   useEffect(() => {
     document.documentElement.style.setProperty('--primary', primaryColor);
     
@@ -17,11 +17,42 @@ export const ThemeProvider = ({ children }) => {
     const hoverColor = primaryColor === '#0075ff' ? '#0066e0' : primaryColor; 
     document.documentElement.style.setProperty('--primary-hover', hoverColor);
 
-    // Set shadow color (transparent version of primary)
-    // For simplicity, we can just use the hex with 0.5 opacity in CSS if we use hex colors
-    // or set a dedicated variable.
-    document.documentElement.style.setProperty('--primary-shadow', `${primaryColor}80`); // 80 is ~0.5 opacity in hex
-  }, [primaryColor]);
+    // Set shadow color (Slightly more vibrant: 30% = 4D in hex)
+    document.documentElement.style.setProperty('--primary-shadow', `${primaryColor}4D`);
+
+    // Dynamic Background logic
+    const isWhite = sidebarType === 'white';
+    
+    const getBgColor = (hex) => {
+      if (isWhite) return '#f8fafc'; // Standard Soft UI Light Background
+      
+      const bgMap = {
+        '#cb3cff': '#1a052e', // Purple
+        '#060b26': '#060b26', // Dark Blue
+        '#0075ff': '#060b26', // Default Blue
+        '#10b981': '#051b14', // Green
+        '#f59e0b': '#1b1205', // Orange
+        '#ef4444': '#1b0505'  // Red
+      };
+      return bgMap[hex.toLowerCase()] || '#060b26';
+    };
+    
+    const bgColor = getBgColor(primaryColor);
+    document.documentElement.style.setProperty('--bg-main', bgColor);
+    document.documentElement.style.setProperty('--bg-panel', isWhite ? '#ffffff' : `${bgColor}d9`);
+    document.documentElement.style.setProperty('--glass-bg', isWhite ? 'rgba(255, 255, 255, 0.8)' : `${bgColor}cc`);
+    
+    // Adjust Text and Borders for Light Theme
+    if (isWhite) {
+      document.documentElement.style.setProperty('--text-main', '#1e293b');
+      document.documentElement.style.setProperty('--text-muted', '#64748b');
+      document.documentElement.style.setProperty('--border-color', 'rgba(0, 0, 0, 0.1)');
+    } else {
+      document.documentElement.style.setProperty('--text-main', '#ffffff');
+      document.documentElement.style.setProperty('--text-muted', '#a0aec0');
+      document.documentElement.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.1)');
+    }
+  }, [primaryColor, sidebarType]);
 
   // Apply Sidebar Width
   useEffect(() => {

@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutGrid, ClipboardList, Clock, PieChart, Users, Building2,
   Settings as SettingsIcon, LogOut, HelpCircle, Star, ShieldCheck,
-  ChevronsRight, ChevronsLeft
+  ChevronsRight, ChevronsLeft, ChevronRight,
+  List, Timer, CheckCircle, XCircle, Truck, ShoppingBag,
+  FileText, Calendar, Receipt
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -14,11 +16,33 @@ const Sidebar = () => {
   const location = useLocation();
 
   const { setIsConfiguratorOpen, sidebarType, isSidebarMini, setIsSidebarMini } = useTheme();
+  const [expandedMenu, setExpandedMenu] = useState(null);
 
   const navItems = [
     { name: 'Menu', path: '/home', icon: LayoutGrid, section: 'MAIN' },
     { name: 'Item Management', path: '/item-management', icon: ClipboardList, section: 'PAGES' },
-    { name: 'Order History', path: '/history', icon: Clock, section: 'PAGES' },
+    { 
+      name: 'Order Management', 
+      icon: Clock, 
+      section: 'PAGES',
+      subItems: [
+        { name: 'All Orders', path: '/order-management/all', icon: List },
+        { name: 'Pending Orders', path: '/order-management/pending', icon: Timer },
+        { name: 'Completed Orders', path: '/order-management/completed', icon: CheckCircle },
+        { name: 'Cancelled Orders', path: '/order-management/cancelled', icon: XCircle },
+        { name: 'Delivery Orders', path: '/order-management/delivery', icon: Truck },
+        { name: 'Takeaway Orders', path: '/order-management/takeaway', icon: ShoppingBag }
+      ]
+    },
+    { 
+      name: 'Bill Management', 
+      icon: Receipt, 
+      section: 'PAGES',
+      subItems: [
+        { name: 'Total Orders Bills', path: '/bill-management/total', icon: FileText },
+        { name: 'Monthly Bills', path: '/bill-management/monthly', icon: Calendar }
+      ]
+    },
     { name: 'Report', path: '/report', icon: PieChart, section: 'PAGES' },
     { name: 'Hotel Management', path: '/hotel-management', icon: Building2, section: 'ADMIN' },
     { name: 'User Management', path: '/user-management', icon: Users, section: 'ADMIN' },
@@ -40,7 +64,7 @@ const Sidebar = () => {
       position: 'relative',
       overflow: 'hidden',
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-      background: sidebarType === 'white' ? '#ffffff' : 'rgba(6, 11, 38, 0.85)',
+      background: sidebarType === 'white' ? '#ffffff' : 'var(--bg-panel)',
       color: sidebarType === 'white' ? '#1f2937' : 'white',
       borderRight: sidebarType === 'white' ? '1px solid #e2e8f0' : '1px solid rgba(255, 255, 255, 0.08)',
       flexShrink: 0
@@ -50,6 +74,7 @@ const Sidebar = () => {
         onClick={(e) => {
           e.stopPropagation();
           setIsSidebarMini(!isSidebarMini);
+          if (!isSidebarMini) setExpandedMenu(null); // Close submenus when minimizing
         }}
         style={{
           position: 'absolute', top: '1.25rem', right: '0.75rem',
@@ -111,40 +136,102 @@ const Sidebar = () => {
               {section}
             </div>
             {navItems.filter(item => item.section === section).map((item) => {
-              const isActive = location.pathname === item.path || (location.pathname === '/' && item.path === '/home');
+              const isActive = location.pathname === item.path || (location.pathname === '/' && item.path === '/home') || (item.subItems && item.subItems.some(sub => location.pathname === sub.path));
               const Icon = item.icon;
               return (
-                <div
-                  key={item.name}
-                  onClick={() => item.action ? item.action() : navigate(item.path)}
-                  className={`vision-nav-item ${isActive ? 'active' : ''}`}
-                  style={{ 
-                    color: sidebarType === 'white' && !isActive ? '#64748b' : 'inherit',
-                    justifyContent: isSidebarMini ? 'center' : 'flex-start',
-                    padding: isSidebarMini ? '0.75rem 0' : '0.75rem 1rem'
-                  }}
-                >
-                  <div 
-                    className="icon-box" 
+                <div key={item.name}>
+                  <div
+                    onClick={() => {
+                      if (item.subItems) {
+                        setExpandedMenu(expandedMenu === item.name ? null : item.name);
+                        if (isSidebarMini) setIsSidebarMini(false);
+                      } else {
+                        item.action ? item.action() : navigate(item.path);
+                      }
+                    }}
+                    className={`vision-nav-item ${isActive ? 'active' : ''}`}
                     style={{ 
-                      minWidth: isSidebarMini ? '30px' : '34px', 
-                      height: isSidebarMini ? '30px' : '34px',
-                      backgroundColor: isActive ? 'var(--primary)' : (sidebarType === 'white' ? '#ffffff' : 'rgba(255,255,255,0.05)'),
-                      boxShadow: !isActive ? '0 4px 6px rgba(0,0,0,0.05)' : '0 4px 12px var(--primary-shadow)',
-                      borderRadius: '0.6rem',
-                      color: isActive ? 'white' : 'var(--primary)'
+                      color: sidebarType === 'white' && !isActive ? '#64748b' : 'inherit',
+                      justifyContent: isSidebarMini ? 'center' : 'flex-start',
+                      padding: isSidebarMini ? '0.75rem 0' : '0.75rem 1rem'
                     }}
                   >
-                    <Icon size={isSidebarMini ? 14 : 18} strokeWidth={isActive ? 2.5 : 2} />
+                    <div 
+                      className="icon-box" 
+                      style={{ 
+                        minWidth: isSidebarMini ? '30px' : '34px', 
+                        height: isSidebarMini ? '30px' : '34px',
+                        backgroundColor: isActive ? 'var(--primary)' : (sidebarType === 'white' ? '#ffffff' : 'rgba(255,255,255,0.05)'),
+                        boxShadow: !isActive ? '0 4px 6px rgba(0,0,0,0.05)' : '0 4px 12px var(--primary-shadow)',
+                        borderRadius: '0.6rem',
+                        color: isActive ? 'white' : 'var(--primary)'
+                      }}
+                    >
+                      <Icon size={isSidebarMini ? 14 : 18} strokeWidth={isActive ? 2.5 : 2} />
+                    </div>
+                    {!isSidebarMini && <span>{item.name}</span>}
+                    
+                    {!isSidebarMini && item.subItems && (
+                      <div style={{ marginLeft: 'auto', transition: 'all 0.3s', transform: expandedMenu === item.name ? 'rotate(90deg)' : 'none' }}>
+                         <ChevronRight size={14} color={isActive ? "white" : "var(--text-muted)"} />
+                      </div>
+                    )}
                   </div>
-                  {!isSidebarMini && <span>{item.name}</span>}
+
+                  {/* Submenu rendering */}
+                  {item.subItems && expandedMenu === item.name && !isSidebarMini && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', paddingLeft: '1.25rem', marginTop: '0.25rem', marginBottom: '0.5rem' }}>
+                       {item.subItems.map(sub => {
+                         const isSubActive = location.pathname === sub.path;
+                         const SubIcon = sub.icon;
+                         return (
+                           <div
+                             key={sub.name}
+                             onClick={() => navigate(sub.path)}
+                             className={`vision-nav-item ${isSubActive ? 'active' : ''}`}
+                             style={{
+                               padding: '0.5rem 1rem',
+                               fontSize: '0.75rem',
+                               fontWeight: 600,
+                               cursor: 'pointer',
+                               borderRadius: '0.5rem',
+                               color: isSubActive ? (sidebarType === 'white' ? 'var(--primary)' : 'white') : (sidebarType === 'white' ? '#64748b' : 'var(--text-muted)'),
+                               backgroundColor: 'transparent',
+                               transition: 'all 0.2s',
+                               display: 'flex',
+                               alignItems: 'center',
+                               gap: '0.75rem',
+                               borderLeft: isSubActive ? '2px solid var(--primary)' : '2px solid transparent'
+                             }}
+                           >
+                             <div 
+                               className="icon-box" 
+                               style={{ 
+                                 minWidth: '28px', 
+                                 height: '28px',
+                                 backgroundColor: isSubActive ? 'var(--primary)' : (sidebarType === 'white' ? '#ffffff' : 'rgba(255,255,255,0.03)'),
+                                 boxShadow: !isSubActive ? '0 2px 4px rgba(0,0,0,0.05)' : '0 4px 10px var(--primary-shadow)',
+                                 borderRadius: '0.5rem',
+                                 color: isSubActive ? 'white' : 'var(--primary)',
+                                 display: 'flex',
+                                 alignItems: 'center',
+                                 justifyContent: 'center'
+                               }}
+                             >
+                               <SubIcon size={14} strokeWidth={isSubActive ? 2.5 : 2} />
+                             </div>
+                             <span>{sub.name}</span>
+                           </div>
+                         );
+                       })}
+                    </div>
+                  )}
                 </div>
               )
             })}
           </React.Fragment>
         ))}
       </nav>
-
 
       {/* Logout */}
       <div

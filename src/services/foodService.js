@@ -7,7 +7,7 @@ export const createFoodItem = async (data) => {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "include",
+            credentials: "include",
       body: JSON.stringify(data)
     });
 
@@ -30,7 +30,7 @@ export const updateFoodItem = async (data) => {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "include",
+            credentials: "include",
       body: JSON.stringify(data)
     });
 
@@ -53,7 +53,7 @@ export const deleteFoodItem = async (data) => {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "include",
+            credentials: "include",
       body: JSON.stringify(data)
     });
 

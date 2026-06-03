@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { User, Lock, Building, ArrowRight, Key, Home, MapPin, Flag, Hash, Phone, Mail, Tag, Star, Image, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { createUser } from '../services/userService';
@@ -81,6 +81,9 @@ const Login = () => {
 
   const { login, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from?.pathname || '/home';
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -93,7 +96,7 @@ const Login = () => {
 
     const result = await login(username, password, hotelId);
     if (result.success) {
-      navigate('/home');
+      navigate(from, { replace: true });
     } else {
       setError(result.message || 'Login failed. Please check your credentials.');
     }
@@ -161,9 +164,9 @@ const Login = () => {
         hotelType,
         rating: Number(rating),
         isActive,
-        hotellogo,
-        hotelImg1,
-        hotelImg2,
+        hotelImg1: hotellogo,
+        hotelImg2: hotelImg1,
+        hotelImg3: hotelImg2,
         staffCount: Number(staffCount)
       };
 
@@ -545,6 +548,7 @@ const Login = () => {
                     <div className="input-wrapper">
                       {hotellogo ? (
                         <img
+                          key={hotellogo}
                           src={hotellogo}
                           alt="Logo Preview"
                           className="input-icon-image"
@@ -564,6 +568,7 @@ const Login = () => {
                     <div className="input-wrapper">
                       {hotelImg1 ? (
                         <img
+                          key={hotelImg1}
                           src={hotelImg1}
                           alt="Preview 1"
                           className="input-icon-image"
@@ -584,6 +589,7 @@ const Login = () => {
                   <div className="input-wrapper">
                     {hotelImg2 ? (
                       <img
+                        key={hotelImg2}
                         src={hotelImg2}
                         alt="Preview 2"
                         className="input-icon-image"
@@ -713,7 +719,18 @@ const Login = () => {
                     </div>
                   </div>
                   <div className="input-wrapper">
-                    <Image className="input-icon" size={18} />
+                    {regUserImage ? (
+                      <img
+                        key={regUserImage}
+                        src={regUserImage}
+                        alt="Profile Preview"
+                        className="input-icon-image"
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        style={{ borderRadius: '50%' }}
+                      />
+                    ) : (
+                      <Image className="input-icon" size={18} />
+                    )}
                     <input
                       type="url"
                       placeholder="Profile Image URL"

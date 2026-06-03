@@ -205,7 +205,7 @@ const UserManagement = () => {
   }, [users, searchTerm, sortConfig]);
 
   return (
-    <div style={{ paddingRight: '1rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ padding: '1rem', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Header />
 
       {/* Toast Notification */}
@@ -542,7 +542,7 @@ const UserManagement = () => {
 
       {/* Edit User Modal */}
       {isEditModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: '280px', width: 'calc(100vw - 280px)', height: '100vh', backgroundColor: 'rgba(6, 11, 38, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1.5rem' }}>
+        <div style={{ position: 'fixed', top: 0, left: 'var(--sidebar-width)', width: 'calc(100vw - var(--sidebar-width))', height: '100vh', backgroundColor: 'var(--glass-bg)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1.5rem' }}>
           <div className="glass-panel" style={{
             width: '100%', maxWidth: '900px', maxHeight: '92vh', overflowY: 'auto',
             borderRadius: '2rem', position: 'relative'
@@ -551,7 +551,7 @@ const UserManagement = () => {
             <div style={{
               padding: '1.75rem 2.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              background: 'rgba(6, 11, 38, 0.95)',
+              background: 'var(--bg-panel)',
               backdropFilter: 'blur(10px)',
               position: 'sticky', top: 0, zIndex: 10, borderTopLeftRadius: '2rem', borderTopRightRadius: '2rem'
             }}>
@@ -666,7 +666,7 @@ const UserManagement = () => {
               <div style={{
                 display: 'flex', gap: '1.25rem', borderTop: '1px solid rgba(255,255,255,0.1)',
                 paddingTop: '2rem', marginTop: '1rem', position: 'sticky', bottom: '-2.5rem',
-                background: 'rgba(6, 11, 38, 0.9)', paddingBottom: '0.5rem', backdropFilter: 'blur(10px)'
+                background: 'var(--bg-panel)', paddingBottom: '0.5rem', backdropFilter: 'blur(10px)'
               }}>
                 <button
                   type="submit"
@@ -699,7 +699,7 @@ const UserManagement = () => {
 
       {/* Delete User Modal */}
       {isDeleteModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: '280px', width: 'calc(100vw - 280px)', height: '100vh', backgroundColor: 'rgba(6, 11, 38, 0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+        <div style={{ position: 'fixed', top: 0, left: 'var(--sidebar-width)', width: 'calc(100vw - var(--sidebar-width))', height: '100vh', backgroundColor: 'var(--glass-bg)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
           <div className="glass-panel" style={{
             width: '100%', maxWidth: '400px', padding: '2.5rem', borderRadius: '2rem',
             textAlign: 'center', position: 'relative', overflow: 'hidden'
