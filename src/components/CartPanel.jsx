@@ -25,11 +25,12 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
     transactionId: '',
     discountAmount: 0
   });
+  const [orderStatus, setOrderStatus] = useState('PENDING');
 
-  const subtotal = cartItems.reduce((sum, item) => sum + ((item.sellingPrice || 0) * item.qty), 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + (Number(item.sellingPrice || 0) * item.qty), 0);
   const gst = cartItems.reduce((sum, item) => {
-    const itemGst = item.gstPercentage || 0;
-    return sum + ((item.sellingPrice || 0) * item.qty * (itemGst / 100));
+    const itemGst = Number(item.gstPercentage || 0);
+    return sum + (Number(item.sellingPrice || 0) * item.qty * (itemGst / 100));
   }, 0);
   const deliveryCharge = orderType === 'Delivery' ? 5.00 : 0;
   const total = subtotal + gst + deliveryCharge;
@@ -59,20 +60,20 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
 
     try {
       const promises = cartItems.map(item => {
-        const itemSellingAmount = (item.sellingPrice || 0) * item.qty;
-        const itemGst = item.gstPercentage ? (itemSellingAmount * item.gstPercentage / 100) : 0;
+        const itemSellingAmount = Number(item.sellingPrice || 0) * item.qty;
+        const itemGst = item.gstPercentage ? (itemSellingAmount * Number(item.gstPercentage) / 100) : 0;
         
         const payload = {
           hotelId: user?.hotelId || "HOTEL001",
           hotelName: user?.hotelName || "WayToIT Restaurant",
           hotelAddress: user?.hotelAddress || "Mumbai",
           orderId: currentOrderId,
-          orderStatus: "PENDING",
+          orderStatus: orderStatus,
           itemId: item.id || item.itemId || `ITEM${Math.floor(Math.random() * 1000)}`,
           itemName: item.itemName,
-          itemCategory: item.category || "Food",
+          itemCategory: item.mainCategory || item.category?.mainCategory || (typeof item.category === 'string' ? item.category : "Food"),
           quantity: item.qty,
-          itemPrice: item.sellingPrice || 0,
+          itemPrice: Number(item.sellingPrice || 0),
           gstAmount: itemGst,
           discountAmount: infoToUse.discountAmount || 0,
           sellingAmount: itemSellingAmount,
@@ -115,6 +116,7 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
     setCurrentOrderId(`ORD${Math.floor(Date.now() / 1000)}`);
     if(onClearCart) onClearCart();
     setCustomerInfo({ customerName: 'Walk-in', customerMobile: '', tableNo: 'T1', remarks: '', paymentMode: 'CASH', paymentStatus: 'PAID', transactionId: '', discountAmount: 0 });
+    setOrderStatus('PENDING');
   };
 
   const handlePrintPre = useReactToPrint({
@@ -125,19 +127,29 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
     contentRef: postReceiptRef,
   });
 
+  // Store print handlers in refs to avoid adding them as useEffect dependencies
+  // (useReactToPrint returns a new function reference on every render)
+  const handlePrintPreRef = useRef(handlePrintPre);
+  const handlePrintPostRef = useRef(handlePrintPost);
+  useEffect(() => { handlePrintPreRef.current = handlePrintPre; });
+  useEffect(() => { handlePrintPostRef.current = handlePrintPost; });
+
+  const paymentStatusRef = useRef(customerInfo.paymentStatus);
+  useEffect(() => { paymentStatusRef.current = customerInfo.paymentStatus; }, [customerInfo.paymentStatus]);
+
   useEffect(() => {
     if (cartView === 'SUCCESS') {
-      // Auto-print based on initial status
+      // Auto-print based on payment status at time of order confirmation
       const timer = setTimeout(() => {
-        if (customerInfo.paymentStatus === 'PAID') {
-          handlePrintPost();
+        if (paymentStatusRef.current === 'PAID') {
+          handlePrintPostRef.current();
         } else {
-          handlePrintPre();
+          handlePrintPreRef.current();
         }
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [cartView, handlePrintPre, handlePrintPost, customerInfo.paymentStatus]);
+  }, [cartView]);
 
   return (
     <div style={{ 
@@ -214,7 +226,7 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
                       <div>
                         <h4 style={{ fontSize: '0.75rem', fontWeight: 700, margin: 0, lineHeight: '1.1' }}>{item.itemName}</h4>
                         <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
-                          ₹{item.sellingPrice.toFixed(2)} x {item.qty} = <span style={{ color: 'var(--text-main)', fontWeight: 700, marginLeft: '0.2rem' }}>₹{(item.sellingPrice * item.qty).toFixed(2)}</span>
+                          ₹{Number(item.sellingPrice || 0).toFixed(2)} x {item.qty} = <span style={{ color: 'var(--text-main)', fontWeight: 700, marginLeft: '0.2rem' }}>₹{(Number(item.sellingPrice || 0) * item.qty).toFixed(2)}</span>
                         </div>
                       </div>
                       
@@ -257,10 +269,64 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
               <span style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--primary)' }}>₹{total.toFixed(2)}</span>
             </div>
 
-            <button style={{ width: '100%', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white', padding: '0.6rem 0.8rem', borderRadius: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem', cursor: 'pointer' }}>
-              <span style={{ fontSize: '0.7rem', fontWeight: 600 }}>Promotion Code</span>
-              <span style={{ backgroundColor: 'var(--primary)', color: 'white', padding: '0.15rem 0.6rem', borderRadius: '1rem', fontSize: '0.6rem', fontWeight: 700 }}>TRYNEW</span>
-            </button>
+            <div style={{ 
+              width: '100%', 
+              backgroundColor: 'rgba(255, 255, 255, 0.03)', 
+              border: '1px solid rgba(255, 255, 255, 0.08)', 
+              padding: '0.6rem 0.8rem', 
+              borderRadius: '2rem', 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              marginBottom: '0.6rem' 
+            }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>Order Status</span>
+              <div 
+                onClick={() => setOrderStatus(prev => prev === 'PENDING' ? 'COMPLETED' : 'PENDING')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  backgroundColor: orderStatus === 'COMPLETED' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                  border: `1px solid ${orderStatus === 'COMPLETED' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                  padding: '0.2rem 0.5rem',
+                  borderRadius: '1.5rem',
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: orderStatus === 'COMPLETED' ? '0 0 12px rgba(34, 197, 94, 0.15)' : '0 0 12px rgba(245, 158, 11, 0.15)'
+                }}
+              >
+                <div style={{
+                  width: '38px',
+                  height: '20px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '10px',
+                  position: 'relative',
+                  marginRight: '0.5rem',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <div style={{
+                    width: '14px',
+                    height: '14px',
+                    backgroundColor: orderStatus === 'COMPLETED' ? '#22c55e' : '#f59e0b',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    top: '3px',
+                    left: orderStatus === 'COMPLETED' ? '21px' : '3px',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: orderStatus === 'COMPLETED' ? '0 0 8px #22c55e' : '0 0 8px #f59e0b'
+                  }} />
+                </div>
+                <span style={{ 
+                  fontSize: '0.65rem', 
+                  fontWeight: 800, 
+                  color: orderStatus === 'COMPLETED' ? '#22c55e' : '#f59e0b',
+                  letterSpacing: '0.05em'
+                }}>
+                  {orderStatus}
+                </span>
+              </div>
+            </div>
 
             {showEmptyCartWarning && (
               <div style={{

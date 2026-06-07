@@ -40,6 +40,7 @@ export const ThemeProvider = ({ children }) => {
     const bgColor = getBgColor(primaryColor);
     document.documentElement.style.setProperty('--bg-main', bgColor);
     document.documentElement.style.setProperty('--bg-panel', isWhite ? '#ffffff' : `${bgColor}d9`);
+    document.documentElement.style.setProperty('--bg-card', isWhite ? '#f1f5f9' : 'rgba(255, 255, 255, 0.04)');
     document.documentElement.style.setProperty('--glass-bg', isWhite ? 'rgba(255, 255, 255, 0.8)' : `${bgColor}cc`);
     
     // Adjust Text and Borders for Light Theme

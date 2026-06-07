@@ -51,7 +51,14 @@ const Menu = () => {
     }
   };
 
-  const categories = ['All', 'Dishes', 'Burger', 'Snacks', 'Drink & Ice', 'Veg', 'Non-Veg'];
+  const categories = useMemo(() => {
+    const cats = new Set();
+    menuItems.forEach(item => {
+      const cat = item.mainCategory || item.category?.mainCategory;
+      if (cat) cats.add(cat);
+    });
+    return ['All', ...Array.from(cats), 'Veg', 'Non-Veg'];
+  }, [menuItems]);
 
   // Filter logic based on search and active tab
   const filteredItems = useMemo(() => {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, MonitorPlay, Bell, Settings, MapPin, Plus, Star, Heart, ChevronsRight, ChevronsLeft, Eye, EyeOff } from 'lucide-react';
+import { Search, Bell, Settings, MapPin, Plus, Star, Heart, ChevronsRight, ChevronsLeft, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Slider from '../components/Slider';
 

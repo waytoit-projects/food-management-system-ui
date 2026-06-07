@@ -128,7 +128,7 @@ const AwesomeDatePicker = ({ selectedDate, onSelect, maxDate }) => {
 };
 
 const AllOrders = () => {
-  const { themeType } = useTheme();
+  const { sidebarType } = useTheme();
   const [ordersData, setOrdersData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');

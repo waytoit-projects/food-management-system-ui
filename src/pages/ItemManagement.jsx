@@ -602,8 +602,8 @@ const ItemManagement = () => {
                         </td>
                         <td style={{ padding: '1rem', color: '#a0aec0' }}>{item.size}</td>
                         <td style={{ padding: '1rem', color: '#a0aec0' }}>{item.unit}</td>
-                        <td style={{ padding: '1rem', color: '#a0aec0', fontWeight: 500 }}>₹{item.costPrice?.toFixed(2)}</td>
-                        <td style={{ padding: '1rem', fontWeight: 800, color: 'var(--primary)', fontSize: '0.9rem' }}>₹{item.sellingPrice?.toFixed(2)}</td>
+                        <td style={{ padding: '1rem', color: '#a0aec0', fontWeight: 500 }}>₹{Number(item.costPrice || 0).toFixed(2)}</td>
+                        <td style={{ padding: '1rem', fontWeight: 800, color: 'var(--primary)', fontSize: '0.9rem' }}>₹{Number(item.sellingPrice || 0).toFixed(2)}</td>
                         <td style={{ padding: '1rem', color: '#a0aec0', fontWeight: 600 }}>{item.gstPercentage}%</td>
                         <td style={{ padding: '1rem', color: '#a0aec0' }}>₹{item.gstAmount}</td>
                         <td style={{ padding: '1rem', color: '#a0aec0', fontSize: '0.7rem' }}>{item.hsnCode}</td>

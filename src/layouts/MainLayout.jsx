@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import ThemeConfigurator from '../components/ThemeConfigurator';
 import { useTheme } from '../context/ThemeContext';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 const MainLayout = () => {
   const { isSidebarMini } = useTheme();
@@ -25,7 +26,9 @@ const MainLayout = () => {
         padding: '0',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
       }}>
-        <Outlet />
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </div>
 
       {/* Theme Configurator Drawer */}

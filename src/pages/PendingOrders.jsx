@@ -7,7 +7,7 @@ import { getPendingOrders, updateOrderStatus } from '../services/orderService';
 import { useTheme } from '../context/ThemeContext';
 
 const PendingOrders = () => {
-  const { themeType } = useTheme();
+  const { sidebarType } = useTheme();
   const [ordersData, setOrdersData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

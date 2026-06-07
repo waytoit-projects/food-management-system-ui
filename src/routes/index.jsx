@@ -15,6 +15,8 @@ import CompletedOrders from '../pages/CompletedOrders';
 import AllOrders from '../pages/AllOrders';
 import CancelledOrders from '../pages/CancelledOrders';
 import TakeawayOrders from '../pages/TakeawayOrders';
+import TotalBills from '../pages/TotalBills';
+import MonthlyBills from '../pages/MonthlyBills';
 
 const AppRoutes = () => {
   return (
@@ -38,6 +40,8 @@ const AppRoutes = () => {
           <Route path="/order-management/completed" element={<CompletedOrders />} />
           <Route path="/order-management/cancelled" element={<CancelledOrders />} />
           <Route path="/order-management/takeaway" element={<TakeawayOrders />} />
+          <Route path="/bill-management/total" element={<TotalBills />} />
+          <Route path="/bill-management/monthly" element={<MonthlyBills />} />
         </Route>
       </Route>
 

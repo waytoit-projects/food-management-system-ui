@@ -16,6 +16,8 @@ export const AuthProvider = ({ children }) => {
   });
   
   const [loading, setLoading] = useState(false);
+  // isLoading is false immediately since we read auth from localStorage synchronously
+  const [isLoading] = useState(false);
 
   const login = async (username, password, hotelId) => {
     setLoading(true);
@@ -57,7 +59,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, loading }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, loading, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

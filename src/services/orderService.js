@@ -137,3 +137,22 @@ export const getAllOrders = async (date) => {
     throw error;
   }
 };
+
+export const getOrderBills = async (fromdate, todate) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/get-order-bills`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ fromdate, todate })
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to fetch order bills: ${res.status}`);
+    }
+    return await res.json();
+  } catch (error) {
+    console.error("Error fetching order bills:", error);
+    throw error;
+  }
+};

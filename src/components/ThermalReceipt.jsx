@@ -132,7 +132,7 @@ const ThermalReceipt = forwardRef(({ orderData, type = 'post' }, ref) => {
                 <td className="text-center" style={{ fontSize: isKOT ? '16px' : 'inherit', fontWeight: isKOT ? '900' : 'inherit' }}>
                   {item.quantity || item.qty}
                 </td>
-                {!isKOT && <td className="text-right">{(item.totalAmount || (item.sellingPrice * item.qty)).toFixed(2)}</td>}
+                {!isKOT && <td className="text-right">{Number(item.totalAmount || (Number(item.sellingPrice || 0) * (item.quantity || item.qty || 0))).toFixed(2)}</td>}
               </tr>
             </React.Fragment>
           ))}
