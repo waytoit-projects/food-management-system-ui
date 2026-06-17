@@ -34,8 +34,13 @@ const ItemManagement = () => {
     unit: 'Plate',
     costPrice: '',
     sellingPrice: '',
+    ngstPercentage: 2.5,
+    ngstAmount: '',
+    sgstPercentage: 2.5,
+    sgstAmount: '',
     gstPercentage: 5,
     gstAmount: '',
+    totalAmount: '',
     hsnCode: '',
     stockQuantity: 0,
     minStockAlert: 0,
@@ -49,6 +54,8 @@ const ItemManagement = () => {
 
   const [formData, setFormData] = useState(initialFormState);
   const [editFormData, setEditFormData] = useState(initialFormState);
+  const [errors, setErrors] = useState({});
+  const [editErrors, setEditErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -78,34 +85,132 @@ const ItemManagement = () => {
     }
   };
 
+  const validateForm = (data) => {
+    const newErrors = {};
+    
+    // Selling Price
+    const sellingPrice = parseFloat(data.sellingPrice);
+    if (data.sellingPrice === '' || isNaN(sellingPrice)) {
+      newErrors.sellingPrice = 'Selling Price is required';
+    } else if (sellingPrice <= 0) {
+      newErrors.sellingPrice = 'Selling Price must be greater than 0';
+    }
+    
+    // NGST %
+    const ngstPercentage = parseFloat(data.ngstPercentage);
+    if (data.ngstPercentage === '' || isNaN(ngstPercentage)) {
+      newErrors.ngstPercentage = 'NGST % is required';
+    } else if (ngstPercentage < 0 || ngstPercentage > 100) {
+      newErrors.ngstPercentage = 'NGST % must be between 0 and 100';
+    }
+    
+    // SGST %
+    const sgstPercentage = parseFloat(data.sgstPercentage);
+    if (data.sgstPercentage === '' || isNaN(sgstPercentage)) {
+      newErrors.sgstPercentage = 'SGST % is required';
+    } else if (sgstPercentage < 0 || sgstPercentage > 100) {
+      newErrors.sgstPercentage = 'SGST % must be between 0 and 100';
+    }
+    
+    // Total GST %
+    if (!newErrors.ngstPercentage && !newErrors.sgstPercentage) {
+      const totalGst = ngstPercentage + sgstPercentage;
+      if (totalGst > 100) {
+        newErrors.gstPercentage = 'Total GST % must not exceed 100';
+      }
+    }
+    
+    // Cost Price
+    const costPrice = parseFloat(data.costPrice);
+    if (data.costPrice !== '' && !isNaN(costPrice) && costPrice < 0) {
+      newErrors.costPrice = 'Cost Price cannot be negative';
+    }
+    
+    // Stock Quantity
+    const stockQuantity = parseFloat(data.stockQuantity);
+    if (data.stockQuantity !== '' && !isNaN(stockQuantity) && stockQuantity < 0) {
+      newErrors.stockQuantity = 'Stock Quantity cannot be negative';
+    }
+    
+    return newErrors;
+  };
+
   const handleFormChange = (e, isEdit = false) => {
     const { name, value, type, checked } = e.target;
     const setter = isEdit ? setEditFormData : setFormData;
+    const errorSetter = isEdit ? setEditErrors : setErrors;
     
     setter(prev => {
+      const rawValue = type === 'checkbox' ? checked : value;
       const newData = {
         ...prev,
-        [name]: type === 'checkbox' ? checked : (type === 'number' ? parseFloat(value) : value)
+        [name]: rawValue
       };
 
-      if (name === 'sellingPrice' || name === 'gstPercentage') {
-        const price = name === 'sellingPrice' ? parseFloat(value) : prev.sellingPrice;
-        const gst = name === 'gstPercentage' ? parseFloat(value) : prev.gstPercentage;
-        if (price && gst) {
-          newData.gstAmount = (price * (gst / 100)).toFixed(2);
-        }
+      // Perform calculations based on the updated values
+      const price = parseFloat(name === 'sellingPrice' ? rawValue : prev.sellingPrice);
+      const ngstPercent = parseFloat(name === 'ngstPercentage' ? rawValue : prev.ngstPercentage);
+      const sgstPercent = parseFloat(name === 'sgstPercentage' ? rawValue : prev.sgstPercentage);
+
+      if (!isNaN(price) && price >= 0) {
+        const nPercent = !isNaN(ngstPercent) ? ngstPercent : 0;
+        const sPercent = !isNaN(sgstPercent) ? sgstPercent : 0;
+
+        const ngstAmount = (price * nPercent) / 100;
+        const sgstAmount = (price * sPercent) / 100;
+        const totalGstPercent = nPercent + sPercent;
+        const totalGstAmount = ngstAmount + sgstAmount;
+        const totalAmount = price + totalGstAmount;
+
+        newData.ngstAmount = isNaN(ngstAmount) ? '' : ngstAmount.toFixed(2);
+        newData.sgstAmount = isNaN(sgstAmount) ? '' : sgstAmount.toFixed(2);
+        newData.gstPercentage = isNaN(totalGstPercent) ? '' : totalGstPercent;
+        newData.gstAmount = isNaN(totalGstAmount) ? '' : totalGstAmount.toFixed(2);
+        newData.totalAmount = isNaN(totalAmount) ? '' : totalAmount.toFixed(2);
+      } else {
+        newData.ngstAmount = '';
+        newData.sgstAmount = '';
+        newData.gstPercentage = '';
+        newData.gstAmount = '';
+        newData.totalAmount = '';
       }
+
+      // Run validation and update error state
+      const validationErrors = validateForm(newData);
+      errorSetter(validationErrors);
+
       return newData;
     });
   };
 
   const openEditModal = (item) => {
     setSelectedItem(item);
-    setEditFormData({
+    
+    const totalGst = parseFloat(item.gstPercentage || 0);
+    const ngstPercent = item.ngstPercentage !== undefined && item.ngstPercentage !== null ? item.ngstPercentage : (totalGst / 2);
+    const sgstPercent = item.sgstPercentage !== undefined && item.sgstPercentage !== null ? item.sgstPercentage : (totalGst / 2);
+    const price = parseFloat(item.sellingPrice || 0);
+
+    const ngstAmount = item.ngstAmount !== undefined && item.ngstAmount !== null ? item.ngstAmount : ((price * ngstPercent) / 100).toFixed(2);
+    const sgstAmount = item.sgstAmount !== undefined && item.sgstAmount !== null ? item.sgstAmount : ((price * sgstPercent) / 100).toFixed(2);
+    const totalGstAmount = item.gstAmount !== undefined && item.gstAmount !== null ? item.gstAmount : (parseFloat(ngstAmount) + parseFloat(sgstAmount)).toFixed(2);
+    const totalAmount = item.totalAmount !== undefined && item.totalAmount !== null ? item.totalAmount : (price + parseFloat(totalGstAmount)).toFixed(2);
+
+    const initialEditData = {
       ...item,
       mainCategory: item.category?.mainCategory || item.mainCategory,
-      subCategory: item.category?.subCategory || item.subCategory
-    });
+      subCategory: item.category?.subCategory || item.subCategory,
+      ngstPercentage: ngstPercent,
+      ngstAmount: ngstAmount,
+      sgstPercentage: sgstPercent,
+      sgstAmount: sgstAmount,
+      gstPercentage: totalGst,
+      gstAmount: totalGstAmount,
+      totalAmount: totalAmount
+    };
+
+    setEditFormData(initialEditData);
+    setEditErrors(validateForm(initialEditData));
     setIsEditModalOpen(true);
   };
 
@@ -177,21 +282,35 @@ const ItemManagement = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['SL No', 'Code', 'Name', 'Main Category', 'Sub Category', 'Brand', 'Type', 'Veg', 'Price', 'Stock', 'Status'];
+    const headers = ['SL No', 'Code', 'Name', 'Main Category', 'Sub Category', 'Brand', 'Type', 'Veg', 'Cost Price', 'Selling Price', 'NGST %', 'NGST Amount', 'SGST %', 'SGST Amount', 'Total GST %', 'Total GST Amount', 'Total Amount', 'HSN Code', 'Stock', 'Min Alert', 'Prep Time', 'Spicy Level', 'Available', 'Active', 'Description'];
     const csvContent = [
       headers.join(','),
       ...sortedAndFilteredItems.map((item, index) => [
         index + 1,
         item.itemCode,
-        item.itemName,
+        `"${item.itemName || ''}"`,
         item.mainCategory,
         item.subCategory,
         item.brandName || '',
         item.itemType,
         item.isVeg ? 'Veg' : 'Non-Veg',
-        item.sellingPrice,
+        Number(item.costPrice || 0).toFixed(2),
+        Number(item.sellingPrice || 0).toFixed(2),
+        Number(item.ngstPercentage || 0).toFixed(2),
+        Number(item.ngstAmount || 0).toFixed(2),
+        Number(item.sgstPercentage || 0).toFixed(2),
+        Number(item.sgstAmount || 0).toFixed(2),
+        Number(item.gstPercentage || 0).toFixed(2),
+        Number(item.gstAmount || 0).toFixed(2),
+        Number(item.totalAmount || 0).toFixed(2),
+        item.hsnCode || '',
         item.stockQuantity,
-        item.isActive ? 'Active' : 'Inactive'
+        item.minStockAlert,
+        item.preparationTime,
+        item.spicyLevel || '',
+        item.isAvailable ? 'Yes' : 'No',
+        item.isActive ? 'Active' : 'Inactive',
+        `"${(item.description || '').replace(/"/g, "'")}"`,
       ].join(','))
     ].join('\n');
 
@@ -244,6 +363,22 @@ const ItemManagement = () => {
       setTimeout(() => setMessage({ type: '', text: '' }), 5000);
     }
   };
+
+  const isAddFormInvalid = 
+    !formData.itemCode ||
+    !formData.itemName ||
+    formData.sellingPrice === '' ||
+    formData.ngstPercentage === '' ||
+    formData.sgstPercentage === '' ||
+    Object.keys(errors).length > 0;
+
+  const isEditFormInvalid = 
+    !editFormData.itemCode ||
+    !editFormData.itemName ||
+    editFormData.sellingPrice === '' ||
+    editFormData.ngstPercentage === '' ||
+    editFormData.sgstPercentage === '' ||
+    Object.keys(editErrors).length > 0;
 
   return (
     <div style={{ padding: '1rem', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -384,23 +519,53 @@ const ItemManagement = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.75rem' }}>
                   <div className="form-group">
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#a0aec0' }}>Cost Price (₹)</label>
-                    <input type="number" name="costPrice" value={formData.costPrice} onChange={(e) => handleFormChange(e, false)} placeholder="0.00" style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white' }} />
+                    <input type="number" name="costPrice" value={formData.costPrice} onChange={(e) => handleFormChange(e, false)} placeholder="0.00" style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: `1px solid ${errors.costPrice ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}`, fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', outlineColor: 'var(--primary)' }} />
+                    {errors.costPrice && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{errors.costPrice}</span>}
                   </div>
                   <div className="form-group">
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#a0aec0' }}>Selling Price *</label>
-                    <input type="number" name="sellingPrice" value={formData.sellingPrice} onChange={(e) => handleFormChange(e, false)} placeholder="0.00" style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary)', backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
+                    <input type="number" name="sellingPrice" value={formData.sellingPrice} onChange={(e) => handleFormChange(e, false)} placeholder="0.00" style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: `1px solid ${errors.sellingPrice ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}`, fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary)', backgroundColor: 'rgba(0, 0, 0, 0.2)', outlineColor: 'var(--primary)' }} />
+                    {errors.sellingPrice && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{errors.sellingPrice}</span>}
                   </div>
                   <div className="form-group">
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#a0aec0' }}>GST (%)</label>
-                    <input type="number" name="gstPercentage" value={formData.gstPercentage} onChange={(e) => handleFormChange(e, false)} style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white' }} />
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#a0aec0' }}>NGST Percentage (%) *</label>
+                    <input type="number" name="ngstPercentage" value={formData.ngstPercentage} onChange={(e) => handleFormChange(e, false)} placeholder="0.00" style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: `1px solid ${errors.ngstPercentage ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}`, fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', outlineColor: 'var(--primary)' }} />
+                    {errors.ngstPercentage && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{errors.ngstPercentage}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#a0aec0' }}>SGST Percentage (%) *</label>
+                    <input type="number" name="sgstPercentage" value={formData.sgstPercentage} onChange={(e) => handleFormChange(e, false)} placeholder="0.00" style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: `1px solid ${errors.sgstPercentage ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}`, fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', outlineColor: 'var(--primary)' }} />
+                    {errors.sgstPercentage && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{errors.sgstPercentage}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#64748b' }}>NGST Amount (₹)</label>
+                    <input type="text" name="ngstAmount" value={formData.ngstAmount} readOnly style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.05)', fontSize: '0.9rem', backgroundColor: 'rgba(255, 255, 255, 0.03)', color: '#94a3b8', cursor: 'not-allowed' }} />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#64748b' }}>SGST Amount (₹)</label>
+                    <input type="text" name="sgstAmount" value={formData.sgstAmount} readOnly style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.05)', fontSize: '0.9rem', backgroundColor: 'rgba(255, 255, 255, 0.03)', color: '#94a3b8', cursor: 'not-allowed' }} />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#64748b' }}>Total GST Percentage (%)</label>
+                    <input type="text" name="gstPercentage" value={formData.gstPercentage} readOnly style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: `1px solid ${errors.gstPercentage ? '#ef4444' : 'rgba(255, 255, 255, 0.05)'}`, fontSize: '0.9rem', backgroundColor: 'rgba(255, 255, 255, 0.03)', color: '#94a3b8', cursor: 'not-allowed' }} />
+                    {errors.gstPercentage && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{errors.gstPercentage}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#64748b' }}>Total GST Amount (₹)</label>
+                    <input type="text" name="gstAmount" value={formData.gstAmount} readOnly style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.05)', fontSize: '0.9rem', backgroundColor: 'rgba(255, 255, 255, 0.03)', color: '#94a3b8', cursor: 'not-allowed' }} />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#64748b' }}>Total Amount (₹)</label>
+                    <input type="text" name="totalAmount" value={formData.totalAmount} readOnly style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.05)', fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary)', backgroundColor: 'rgba(255, 255, 255, 0.03)', cursor: 'not-allowed' }} />
                   </div>
                   <div className="form-group">
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#a0aec0' }}>Initial Stock</label>
-                    <input type="number" name="stockQuantity" value={formData.stockQuantity} onChange={(e) => handleFormChange(e, false)} style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white' }} />
+                    <input type="number" name="stockQuantity" value={formData.stockQuantity} onChange={(e) => handleFormChange(e, false)} style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: `1px solid ${errors.stockQuantity ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}`, fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', outlineColor: 'var(--primary)' }} />
+                    {errors.stockQuantity && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{errors.stockQuantity}</span>}
                   </div>
                   <div className="form-group">
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#a0aec0' }}>Alert at Stock</label>
-                    <input type="number" name="minStockAlert" value={formData.minStockAlert} onChange={(e) => handleFormChange(e, false)} style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white' }} />
+                    <input type="number" name="minStockAlert" value={formData.minStockAlert} onChange={(e) => handleFormChange(e, false)} style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', outlineColor: 'var(--primary)' }} />
                   </div>
                 </div>
               </div>
@@ -455,11 +620,14 @@ const ItemManagement = () => {
               <div style={{ display: 'flex', gap: '1.5rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: '2.5rem', marginTop: '1rem' }}>
                 <button 
                   type="submit" 
-                  disabled={loading} 
+                  disabled={loading || isAddFormInvalid} 
                   style={{ 
-                    flex: 2, padding: '1.1rem', borderRadius: '1.5rem', backgroundColor: 'var(--primary)', 
-                    color: 'white', border: 'none', fontWeight: 800, fontSize: '0.9rem', 
-                    cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 10px 25px rgba(245, 158, 11, 0.25)',
+                    flex: 2, padding: '1.1rem', borderRadius: '1.5rem', 
+                    backgroundColor: (loading || isAddFormInvalid) ? 'rgba(255, 255, 255, 0.1)' : 'var(--primary)', 
+                    color: (loading || isAddFormInvalid) ? 'rgba(255, 255, 255, 0.3)' : 'white', 
+                    border: 'none', fontWeight: 800, fontSize: '0.9rem', 
+                    cursor: (loading || isAddFormInvalid) ? 'not-allowed' : 'pointer', transition: 'all 0.2s', 
+                    boxShadow: (loading || isAddFormInvalid) ? 'none' : '0 10px 25px rgba(245, 158, 11, 0.25)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem'
                   }}
                 >
@@ -534,8 +702,13 @@ const ItemManagement = () => {
                       { label: 'Unit Type', key: 'unit' },
                       { label: 'Cost Price', key: 'costPrice' },
                       { label: 'Selling Price', key: 'sellingPrice' },
-                      { label: 'GST %', key: 'gstPercentage' },
-                      { label: 'GST Amount', key: 'gstAmount' },
+                      { label: 'NGST %', key: 'ngstPercentage' },
+                      { label: 'NGST Amt', key: 'ngstAmount' },
+                      { label: 'SGST %', key: 'sgstPercentage' },
+                      { label: 'SGST Amt', key: 'sgstAmount' },
+                      { label: 'Total GST %', key: 'gstPercentage' },
+                      { label: 'Total GST Amt', key: 'gstAmount' },
+                      { label: 'Total Amount', key: 'totalAmount' },
                       { label: 'HSN Code', key: 'hsnCode' },
                       { label: 'Stock', key: 'stockQuantity' },
                       { label: 'Min Alert', key: 'minStockAlert' },
@@ -604,8 +777,13 @@ const ItemManagement = () => {
                         <td style={{ padding: '1rem', color: '#a0aec0' }}>{item.unit}</td>
                         <td style={{ padding: '1rem', color: '#a0aec0', fontWeight: 500 }}>₹{Number(item.costPrice || 0).toFixed(2)}</td>
                         <td style={{ padding: '1rem', fontWeight: 800, color: 'var(--primary)', fontSize: '0.9rem' }}>₹{Number(item.sellingPrice || 0).toFixed(2)}</td>
-                        <td style={{ padding: '1rem', color: '#a0aec0', fontWeight: 600 }}>{item.gstPercentage}%</td>
-                        <td style={{ padding: '1rem', color: '#a0aec0' }}>₹{item.gstAmount}</td>
+                        <td style={{ padding: '1rem', color: '#a0aec0', fontWeight: 600 }}>{Number(item.ngstPercentage || 0).toFixed(2)}%</td>
+                        <td style={{ padding: '1rem', color: '#a0aec0' }}>₹{Number(item.ngstAmount || 0).toFixed(2)}</td>
+                        <td style={{ padding: '1rem', color: '#a0aec0', fontWeight: 600 }}>{Number(item.sgstPercentage || 0).toFixed(2)}%</td>
+                        <td style={{ padding: '1rem', color: '#a0aec0' }}>₹{Number(item.sgstAmount || 0).toFixed(2)}</td>
+                        <td style={{ padding: '1rem', color: '#a0aec0', fontWeight: 600 }}>{Number(item.gstPercentage || 0).toFixed(2)}%</td>
+                        <td style={{ padding: '1rem', color: '#a0aec0' }}>₹{Number(item.gstAmount || 0).toFixed(2)}</td>
+                        <td style={{ padding: '1rem', fontWeight: 700, color: '#10b981' }}>₹{Number(item.totalAmount || 0).toFixed(2)}</td>
                         <td style={{ padding: '1rem', color: '#a0aec0', fontSize: '0.7rem' }}>{item.hsnCode}</td>
                         <td style={{ padding: '1rem' }}>
                           <span style={{ 
@@ -781,27 +959,57 @@ const ItemManagement = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.5rem' }}>
                   <div className="form-group">
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>Cost Price (₹)</label>
-                    <input type="number" name="costPrice" value={editFormData.costPrice} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white' }} />
+                    <input type="number" name="costPrice" value={editFormData.costPrice} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: `1px solid ${editErrors.costPrice ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}`, fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', outlineColor: 'var(--primary)' }} />
+                    {editErrors.costPrice && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{editErrors.costPrice}</span>}
                   </div>
                   <div className="form-group">
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>Selling Price (₹)</label>
-                    <input type="number" name="sellingPrice" value={editFormData.sellingPrice} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary)', backgroundColor: 'rgba(0, 0, 0, 0.2)' }} />
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>Selling Price (₹) *</label>
+                    <input type="number" name="sellingPrice" value={editFormData.sellingPrice} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: `1px solid ${editErrors.sellingPrice ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}`, fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary)', backgroundColor: 'rgba(0, 0, 0, 0.2)', outlineColor: 'var(--primary)' }} />
+                    {editErrors.sellingPrice && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{editErrors.sellingPrice}</span>}
                   </div>
                   <div className="form-group">
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>GST (%)</label>
-                    <input type="number" name="gstPercentage" value={editFormData.gstPercentage} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white' }} />
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>NGST Percentage (%) *</label>
+                    <input type="number" name="ngstPercentage" value={editFormData.ngstPercentage} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: `1px solid ${editErrors.ngstPercentage ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}`, fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', outlineColor: 'var(--primary)' }} />
+                    {editErrors.ngstPercentage && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{editErrors.ngstPercentage}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>SGST Percentage (%) *</label>
+                    <input type="number" name="sgstPercentage" value={editFormData.sgstPercentage} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: `1px solid ${editErrors.sgstPercentage ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}`, fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', outlineColor: 'var(--primary)' }} />
+                    {editErrors.sgstPercentage && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{editErrors.sgstPercentage}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#64748b' }}>NGST Amount (₹)</label>
+                    <input type="text" name="ngstAmount" value={editFormData.ngstAmount} readOnly style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.05)', fontSize: '0.9rem', backgroundColor: 'rgba(255, 255, 255, 0.03)', color: '#94a3b8', cursor: 'not-allowed' }} />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#64748b' }}>SGST Amount (₹)</label>
+                    <input type="text" name="sgstAmount" value={editFormData.sgstAmount} readOnly style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.05)', fontSize: '0.9rem', backgroundColor: 'rgba(255, 255, 255, 0.03)', color: '#94a3b8', cursor: 'not-allowed' }} />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#64748b' }}>Total GST Percentage (%)</label>
+                    <input type="text" name="gstPercentage" value={editFormData.gstPercentage} readOnly style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: `1px solid ${editErrors.gstPercentage ? '#ef4444' : 'rgba(255, 255, 255, 0.05)'}`, fontSize: '0.9rem', backgroundColor: 'rgba(255, 255, 255, 0.03)', color: '#94a3b8', cursor: 'not-allowed' }} />
+                    {editErrors.gstPercentage && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{editErrors.gstPercentage}</span>}
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#64748b' }}>Total GST Amount (₹)</label>
+                    <input type="text" name="gstAmount" value={editFormData.gstAmount} readOnly style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.05)', fontSize: '0.9rem', backgroundColor: 'rgba(255, 255, 255, 0.03)', color: '#94a3b8', cursor: 'not-allowed' }} />
+                  </div>
+                  <div className="form-group">
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#64748b' }}>Total Amount (₹)</label>
+                    <input type="text" name="totalAmount" value={editFormData.totalAmount} readOnly style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.05)', fontSize: '0.9rem', fontWeight: 700, color: 'var(--primary)', backgroundColor: 'rgba(255, 255, 255, 0.03)', cursor: 'not-allowed' }} />
                   </div>
                   <div className="form-group">
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>Stock Quantity</label>
-                    <input type="number" name="stockQuantity" value={editFormData.stockQuantity} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white' }} />
+                    <input type="number" name="stockQuantity" value={editFormData.stockQuantity} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: `1px solid ${editErrors.stockQuantity ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}`, fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', outlineColor: 'var(--primary)' }} />
+                    {editErrors.stockQuantity && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{editErrors.stockQuantity}</span>}
                   </div>
                   <div className="form-group">
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>Min Stock Alert</label>
-                    <input type="number" name="minStockAlert" value={editFormData.minStockAlert} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white' }} />
+                    <input type="number" name="minStockAlert" value={editFormData.minStockAlert} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', outlineColor: 'var(--primary)' }} />
                   </div>
                   <div className="form-group">
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>HSN Code</label>
-                    <input type="text" name="hsnCode" value={editFormData.hsnCode} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white' }} />
+                    <input type="text" name="hsnCode" value={editFormData.hsnCode} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', outlineColor: 'var(--primary)' }} />
                   </div>
                 </div>
               </div>
@@ -857,11 +1065,14 @@ const ItemManagement = () => {
               }}>
                 <button 
                   type="submit" 
-                  disabled={loading} 
+                  disabled={loading || isEditFormInvalid} 
                   style={{ 
-                    flex: 2, padding: '1.1rem', borderRadius: '1.25rem', backgroundColor: 'var(--primary)', 
-                    color: 'white', border: 'none', fontWeight: 800, fontSize: '0.9rem', 
-                    cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 10px 20px rgba(245, 158, 11, 0.2)',
+                    flex: 2, padding: '1.1rem', borderRadius: '1.25rem', 
+                    backgroundColor: (loading || isEditFormInvalid) ? 'rgba(255, 255, 255, 0.1)' : 'var(--primary)', 
+                    color: (loading || isEditFormInvalid) ? 'rgba(255, 255, 255, 0.3)' : 'white', 
+                    border: 'none', fontWeight: 800, fontSize: '0.9rem', 
+                    cursor: (loading || isEditFormInvalid) ? 'not-allowed' : 'pointer', transition: 'all 0.2s', 
+                    boxShadow: (loading || isEditFormInvalid) ? 'none' : '0 10px 20px rgba(245, 158, 11, 0.2)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem'
                   }}
                 >

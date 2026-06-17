@@ -119,7 +119,7 @@ const AwesomeDatePicker = ({ selectedDate, onSelect, maxDate }) => {
   );
 };
 
-const TotalBills = () => {
+const DayWiseBills = () => {
   const { user } = useAuth();
   
   // Date states
@@ -158,6 +158,7 @@ const TotalBills = () => {
           orderDate: item.orderDate ?? item.order_date,
           orderTime: item.orderTime ?? item.order_time,
           orderId: item.orderId ?? item.order_id,
+          totalAmount: item.totalAmount ?? item.totalAamount ?? item.sellingAmount,
         })) : [];
         setOrdersItems(normalized);
       } else {
@@ -232,6 +233,8 @@ const TotalBills = () => {
       groups[oid].items.push(item);
       groups[oid].totalAmount += item.totalAmount || item.sellingAmount || 0;
       groups[oid].gstAmount += item.gstAmount || 0;
+      groups[oid].ngstAmount = (groups[oid].ngstAmount || 0) + (item.ngstAmount || 0);
+      groups[oid].sgstAmount = (groups[oid].sgstAmount || 0) + (item.sgstAmount || 0);
       groups[oid].sellingAmount += item.sellingAmount || 0;
     });
     return Object.values(groups);
@@ -246,6 +249,10 @@ const TotalBills = () => {
       return sum + o.items.reduce((s, item) => s + (item.quantity || 0), 0);
     }, 0);
     const avgBill = totalBills ? totalRevenue / totalBills : 0;
+    
+    const totalGst = completedOrders.reduce((sum, o) => sum + (o.gstAmount || 0), 0);
+    const totalNgst = completedOrders.reduce((sum, o) => sum + (o.ngstAmount || 0), 0);
+    const totalSgst = completedOrders.reduce((sum, o) => sum + (o.sgstAmount || 0), 0);
 
     // Dine-In vs Takeaway vs Delivery/Online revenue
     let dineInRevenue = 0;
@@ -285,7 +292,10 @@ const TotalBills = () => {
       takeawayRevenue,
       onlineRevenue,
       highestItem,
-      lowestItem
+      lowestItem,
+      totalGst,
+      totalNgst,
+      totalSgst
     };
   }, [orders, filteredItems]);
 
@@ -875,6 +885,25 @@ const TotalBills = () => {
                 ))}
               </div>
 
+              {/* Distinct GST Information DIV */}
+              <div className="bg-gradient-to-br from-amber-500/10 to-orange-600/10 border border-amber-500/20 rounded-xl p-4 mb-6 shadow-inner">
+                <div className="text-[10px] font-black text-amber-500 mb-3 uppercase tracking-widest flex items-center gap-1.5">
+                  <DollarSign size={12} /> Tax & GST Breakdown
+                </div>
+                <div className="flex justify-between items-center mb-2 pb-2 border-b border-white/5">
+                  <span className="text-sm font-semibold text-slate-300">Total GST</span>
+                  <span className="text-lg font-black text-white">₹{stats.totalGst.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs text-slate-400 mb-1">
+                  <span>NGST</span>
+                  <span className="font-semibold text-slate-300">₹{stats.totalNgst.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs text-slate-400">
+                  <span>SGST</span>
+                  <span className="font-semibold text-slate-300">₹{stats.totalSgst.toFixed(2)}</span>
+                </div>
+              </div>
+
               {/* Mini Histogram Chart */}
               <div className="flex-1 min-h-[120px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -966,4 +995,4 @@ const TotalBills = () => {
   );
 };
 
-export default TotalBills;
+export default DayWiseBills;

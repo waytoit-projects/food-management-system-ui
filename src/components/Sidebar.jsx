@@ -39,8 +39,8 @@ const Sidebar = () => {
       icon: Receipt,
       section: 'PAGES',
       subItems: [
-        { name: 'Orders Bills', path: '/bill-management/total', icon: FileText },
-        { name: 'Monthly Bills', path: '/bill-management/monthly', icon: Calendar }
+        { name: 'Day Wise Bills', path: '/bill-management/daywisebills', icon: FileText },
+        { name: 'Month Wise Bills', path: '/bill-management/monthwisebills', icon: Calendar }
       ]
     },
     { name: 'Report', path: '/report', icon: PieChart, section: 'PAGES' },

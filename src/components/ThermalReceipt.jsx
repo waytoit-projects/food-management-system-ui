@@ -149,10 +149,18 @@ const ThermalReceipt = forwardRef(({ orderData, type = 'post' }, ref) => {
             <span>₹{Number(subtotal || (totalAmount - gstAmount)).toFixed(2)}</span>
           </div>
           {gstAmount > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>GST:</span>
-              <span>₹{Number(gstAmount).toFixed(2)}</span>
-            </div>
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>GST:</span>
+                <span>₹{Number(gstAmount).toFixed(2)}</span>
+              </div>
+              {(orderData.ngstAmount > 0 || orderData.sgstAmount > 0) && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
+                  <span>(NGST: ₹{Number(orderData.ngstAmount || 0).toFixed(2)})</span>
+                  <span>(SGST: ₹{Number(orderData.sgstAmount || 0).toFixed(2)})</span>
+                </div>
+              )}
+            </>
           )}
           {orderData.discountAmount > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>

@@ -31,7 +31,7 @@ const monthsList = [
 
 const yearsList = [2024, 2025, 2026, 2027];
 
-const MonthlyBills = () => {
+const MonthWiseBills = () => {
   const { user } = useAuth();
   
   // Date selection states
@@ -56,6 +56,7 @@ const MonthlyBills = () => {
       orderId: item.orderId ?? item.order_id,
       orderDate: item.orderDate ?? item.order_date,
       orderTime: item.orderTime ?? item.order_time,
+      totalAmount: item.totalAmount ?? item.totalAamount ?? item.sellingAmount,
     })) : [];
   };
 
@@ -157,6 +158,9 @@ const MonthlyBills = () => {
       }
       groups[oid].items.push(item);
       groups[oid].totalAmount += item.totalAmount || item.sellingAmount || 0;
+      groups[oid].gstAmount = (groups[oid].gstAmount || 0) + (item.gstAmount || 0);
+      groups[oid].ngstAmount = (groups[oid].ngstAmount || 0) + (item.ngstAmount || 0);
+      groups[oid].sgstAmount = (groups[oid].sgstAmount || 0) + (item.sgstAmount || 0);
     });
     return Object.values(groups);
   };
@@ -173,6 +177,10 @@ const MonthlyBills = () => {
     const prevRevenue = completedPrev.reduce((sum, o) => sum + o.totalAmount, 0);
     const totalBills = completedCurrent.length;
     const totalItems = filteredCurrentItems.filter(i => i.orderStatus === 'COMPLETED').reduce((sum, i) => sum + (i.quantity || 0), 0);
+
+    const totalGst = completedCurrent.reduce((sum, o) => sum + (o.gstAmount || 0), 0);
+    const totalNgst = completedCurrent.reduce((sum, o) => sum + (o.ngstAmount || 0), 0);
+    const totalSgst = completedCurrent.reduce((sum, o) => sum + (o.sgstAmount || 0), 0);
 
     // Days with active sales
     const activeDates = new Set(completedCurrent.map(o => o.orderDate));
@@ -224,7 +232,10 @@ const MonthlyBills = () => {
       bestSellingItem,
       bestSellingCategory,
       revenueDiff,
-      growthPercent
+      growthPercent,
+      totalGst,
+      totalNgst,
+      totalSgst
     };
   }, [currentOrders, prevOrders, filteredCurrentItems, selectedMonth]);
 
@@ -608,10 +619,30 @@ const MonthlyBills = () => {
               
               <div className="flex flex-col gap-4">
                 <div className="bg-slate-950/50 p-4 rounded-xl border border-white/5">
-                  <div className="text-xs text-slate-400">Current Month</div>
-                  <div className="text-2xl font-black text-white mt-1">₹{stats.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+                  <div className="text-xs text-slate-400">Total Revenue Collected</div>
+                  <div className="text-2xl font-black text-white mt-1 mb-2">₹{stats.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
                 </div>
-                <div className="bg-slate-950/30 p-4 rounded-xl border border-white/5 opacity-70">
+
+                {/* Distinct GST Information DIV */}
+                <div className="bg-gradient-to-br from-amber-500/10 to-orange-600/10 border border-amber-500/20 rounded-xl p-4 shadow-inner">
+                  <div className="text-[10px] font-black text-amber-500 mb-3 uppercase tracking-widest flex items-center gap-1.5">
+                    <DollarSign size={12} /> Tax & GST Breakdown
+                  </div>
+                  <div className="flex justify-between items-center mb-2 pb-2 border-b border-white/5">
+                    <span className="text-sm font-semibold text-slate-300">Total GST</span>
+                    <span className="text-lg font-black text-white">₹{stats.totalGst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs text-slate-400 mb-1">
+                    <span>NGST</span>
+                    <span className="font-semibold text-slate-300">₹{stats.totalNgst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs text-slate-400">
+                    <span>SGST</span>
+                    <span className="font-semibold text-slate-300">₹{stats.totalSgst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+
+                <div className="bg-slate-950/30 p-4 rounded-xl border border-white/5 opacity-70 mt-2">
                   <div className="text-xs text-slate-400">Previous Month</div>
                   <div className="text-xl font-bold text-slate-300 mt-1">₹{stats.prevRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
                 </div>
@@ -775,4 +806,4 @@ const MonthlyBills = () => {
   );
 };
 
-export default MonthlyBills;
+export default MonthWiseBills;

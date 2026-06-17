@@ -29,8 +29,23 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
 
   const subtotal = cartItems.reduce((sum, item) => sum + (Number(item.sellingPrice || 0) * item.qty), 0);
   const gst = cartItems.reduce((sum, item) => {
-    const itemGst = Number(item.gstPercentage || 0);
-    return sum + (Number(item.sellingPrice || 0) * item.qty * (itemGst / 100));
+    // Prefer API-provided gstAmount (per unit), scale by qty
+    if (item.gstAmount !== undefined && item.gstAmount !== null) {
+      return sum + (Number(item.gstAmount || 0) * item.qty);
+    }
+    // Fallback: calculate from gstPercentage
+    const itemGstPct = Number(item.gstPercentage || 0);
+    return sum + (Number(item.sellingPrice || 0) * item.qty * (itemGstPct / 100));
+  }, 0);
+  const totalNgst = cartItems.reduce((sum, item) => {
+    if (item.ngstAmount !== undefined && item.ngstAmount !== null) return sum + (Number(item.ngstAmount || 0) * item.qty);
+    const itemGst = item.gstAmount !== undefined && item.gstAmount !== null ? Number(item.gstAmount || 0) : (Number(item.sellingPrice || 0) * (Number(item.gstPercentage || 0) / 100));
+    return sum + ((itemGst / 2) * item.qty);
+  }, 0);
+  const totalSgst = cartItems.reduce((sum, item) => {
+    if (item.sgstAmount !== undefined && item.sgstAmount !== null) return sum + (Number(item.sgstAmount || 0) * item.qty);
+    const itemGst = item.gstAmount !== undefined && item.gstAmount !== null ? Number(item.gstAmount || 0) : (Number(item.sellingPrice || 0) * (Number(item.gstPercentage || 0) / 100));
+    return sum + ((itemGst / 2) * item.qty);
   }, 0);
   const deliveryCharge = orderType === 'Delivery' ? 5.00 : 0;
   const total = subtotal + gst + deliveryCharge;
@@ -61,7 +76,16 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
     try {
       const promises = cartItems.map(item => {
         const itemSellingAmount = Number(item.sellingPrice || 0) * item.qty;
-        const itemGst = item.gstPercentage ? (itemSellingAmount * Number(item.gstPercentage) / 100) : 0;
+        // Use API-provided gstAmount per unit scaled by qty, or calculate from percentage
+        const itemGst = (item.gstAmount !== undefined && item.gstAmount !== null)
+          ? Number(item.gstAmount || 0) * item.qty
+          : (item.gstPercentage ? (itemSellingAmount * Number(item.gstPercentage) / 100) : 0);
+        const itemNgstAmount = (item.ngstAmount !== undefined && item.ngstAmount !== null) 
+          ? Number(item.ngstAmount || 0) * item.qty 
+          : (itemGst / 2);
+        const itemSgstAmount = (item.sgstAmount !== undefined && item.sgstAmount !== null) 
+          ? Number(item.sgstAmount || 0) * item.qty 
+          : (itemGst / 2);
         
         const payload = {
           hotelId: user?.hotelId || "HOTEL001",
@@ -77,6 +101,8 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
           gstAmount: itemGst,
           discountAmount: infoToUse.discountAmount || 0,
           sellingAmount: itemSellingAmount,
+          ngstAmount: itemNgstAmount,
+          sgstAmount: itemSgstAmount,
           totalAmount: itemSellingAmount + itemGst,
           givenType: orderType.toUpperCase().replace(' ', '_'),
           tableNo: infoToUse.tableNo || "T1",
@@ -256,6 +282,18 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
                 <span>GST</span>
                 <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>₹{gst.toFixed(2)}</span>
               </div>
+              {totalNgst > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.65rem', paddingLeft: '0.5rem' }}>
+                  <span>├─ NGST</span>
+                  <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>₹{totalNgst.toFixed(2)}</span>
+                </div>
+              )}
+              {totalSgst > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.65rem', paddingLeft: '0.5rem' }}>
+                  <span>└─ SGST</span>
+                  <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>₹{totalSgst.toFixed(2)}</span>
+                </div>
+              )}
               {orderType === 'Delivery' && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
                   <span>Delivery Charge</span>
@@ -564,6 +602,8 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
               items: cartItems,
               totalAmount: total - (customerInfo.discountAmount || 0),
               gstAmount: gst,
+              ngstAmount: totalNgst,
+              sgstAmount: totalSgst,
               givenType: orderType.toUpperCase().replace(' ', '_'),
               orderDate: new Date().toLocaleDateString(),
               orderTime: new Date().toLocaleTimeString()
@@ -601,6 +641,8 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
               items: cartItems,
               totalAmount: total - (customerInfo.discountAmount || 0),
               gstAmount: gst,
+              ngstAmount: totalNgst,
+              sgstAmount: totalSgst,
               givenType: orderType.toUpperCase().replace(' ', '_'),
               orderDate: new Date().toLocaleDateString(),
               orderTime: new Date().toLocaleTimeString()
