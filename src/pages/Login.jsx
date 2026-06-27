@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Lock, Building, ArrowRight, Key, Home, MapPin, Flag, Hash, Phone, Mail, Tag, Star, Image, Users } from 'lucide-react';
+import { User, Lock, Building, ArrowRight, Key, Home, MapPin, Flag, Hash, Phone, Mail, Tag, Star, Image, Users, ChefHat, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { createUser } from '../services/userService';
-import hotelLogo from '../assets/images/logo.png';
+import kitchenBanner from '../assets/kitchen_banner.png';
+import kitchenBg1 from '../assets/logoFMS.png';
+import kitchenBg2 from '../assets/kitchen_bg2.jpg';
 
 const indianStateCityMap = {
   'Andhra Pradesh': ['Vijayawada', 'Visakhapatnam', 'Tirupati', 'Guntur', 'Kurnool', 'Nellore', 'Srikakulam', 'Anantapur', 'Kakinada', 'Ongole'],
@@ -49,6 +51,7 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [hotelId, setHotelId] = useState('');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [registerHotelId, setRegisterHotelId] = useState('');
@@ -69,7 +72,7 @@ const Login = () => {
   const [registerError, setRegisterError] = useState('');
   const [registerSuccess, setRegisterSuccess] = useState('');
   const [registerLoading, setRegisterLoading] = useState(false);
-  
+
   // Registration Step Management
   const [regStep, setRegStep] = useState(1); // 1: Hotel, 2: User
   const [regUsername, setRegUsername] = useState('');
@@ -198,7 +201,7 @@ const Login = () => {
 
       setRegisterSuccess(data.message || 'Hotel created successfully! Now create your admin user.');
       setRegStep(2); // Move to user creation step
-      
+
       // Pre-fill user data with hotel info if needed
       setRegUserPhone(phone);
       setRegUserEmail(email);
@@ -273,142 +276,260 @@ const Login = () => {
 
   return (
     <>
-      <div 
-        className="glass-panel animate-fade-in"
-        style={{
-          width: '100%',
-          maxWidth: '420px',
-          padding: '2.5rem',
-          borderRadius: '1rem',
-          margin: '1rem'
-        }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div 
-            className="animate-fade-in delay-100"
-            style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              marginBottom: '1rem'
-            }}
-          >
-            <img src={hotelLogo} alt="Hotel Logo" style={{ height: '80px', objectFit: 'contain' }} />
-          </div>
-          <h1 className="animate-fade-in delay-100" style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-            Grand Palace
-          </h1>
-          <p className="animate-fade-in delay-100" style={{ color: 'var(--text-muted)' }}>
-            Hotel Management System
-          </p>
-        </div>
-
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          {error && (
-            <div style={{ padding: '0.75rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '0.5rem', fontSize: '0.875rem', textAlign: 'center' }}>
-              {error}
-            </div>
-          )}
+      {/* Styles for premium layout inputs, buttons & responsive behavior */}
+      <style>
+        {`
+          .login-wrapper {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+          }
           
-          <div className="input-wrapper animate-fade-in delay-200" style={{ position: 'relative' }}>
-            <User className="input-icon" size={20} />
-            <input 
-              type="text" 
-              placeholder="Username"
-              className="input-field"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              disabled={loading}
-              required
-            />
+          .login-wrapper::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 2;
+          }
+
+          .login-right {
+            position: relative;
+            z-index: 3;
+            width: 100%;
+            max-width: 440px;
+            background-color: rgb(30 53 62 / 45%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 3rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: #f8fafc;
+            border-radius: 1.25rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-sizing: border-box;
+          }
+          
+          .login-input-box {
+            position: relative;
+            width: 100%;
+            margin-bottom: 1rem;
+          }
+          
+          .login-input-field {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            outline: none;
+            color: #f8fafc;
+            background-color: rgba(0, 0, 0, 0.3);
+            transition: all 0.2s ease-in-out;
+          }
+          
+          .login-input-field::placeholder {
+            color: #94a3b8;
+          }
+          
+          .login-input-field:focus {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+            background-color: rgba(0, 0, 0, 0.4);
+          }
+          
+          .login-input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+          }
+          
+          .login-password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            cursor: pointer;
+            border: none;
+            background: none;
+            padding: 0;
+            display: flex;
+            align-items: center;
+          }
+          
+          .login-password-toggle:hover {
+            color: #f8fafc;
+          }
+          
+          .login-btn-orange {
+            width: 100%;
+            background-color: #f59e0b;
+            color: #ffffff;
+            border: none;
+            padding: 0.85rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+          }
+          
+          .login-btn-orange:hover {
+            background-color: #d97706;
+          }
+          
+          .login-btn-orange:disabled {
+            background-color: rgba(255,255,255,0.2);
+            cursor: not-allowed;
+            box-shadow: none;
+          }
+          
+          @media (max-width: 900px) {
+            .login-wrapper {
+              padding: 1rem;
+            }
+            .login-right {
+              padding: 2rem;
+            }
+          }
+        `}
+      </style>
+
+      <div className="login-wrapper animate-fade-in">
+        <img
+          src={kitchenBg2}
+          alt="Kitchen Background"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            zIndex: 1
+          }}
+        />
+        {/* Center: Login Form Pane */}
+        <div className="login-right">
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyItems: 'center', background: 'rgba(0,0,0,0)', padding: '0.5rem', borderRadius: '0.75rem', marginBottom: '1rem' }}>
+              <img
+                src={kitchenBg1}
+                alt="Food Management System Logo"
+                style={{ width: '90px', height: '90px', objectFit: 'cover', borderRadius: '0.5rem' }}
+              />
+            </div>
+            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#f8fafc', margin: '0 0 0.25rem 0', letterSpacing: '-0.02em' }}>
+              Food Management System
+            </h2>
+            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: 0, fontWeight: 500 }}>Streamline Orders, billing and analysis</p>
           </div>
 
-          <div className="input-wrapper animate-fade-in delay-200" style={{ position: 'relative' }}>
-            <Lock className="input-icon" size={20} />
-            <input 
-              type="password" 
-              placeholder="Password"
-              className="input-field"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              required
-            />
-          </div>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column' }}>
+            {error && (
+              <div style={{ padding: '0.75rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#fca5a5', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '0.375rem', fontSize: '0.85rem', textAlign: 'center', marginBottom: '1.25rem', fontWeight: 500 }}>
+                {error}
+              </div>
+            )}
 
-          <div className="input-wrapper animate-fade-in delay-200" style={{ position: 'relative' }}>
-            <Building className="input-icon" size={20} />
-            <input 
-              type="text" 
-              placeholder="Hotel ID"
-              className="input-field"
-              value={hotelId}
-              onChange={(e) => setHotelId(e.target.value)}
-              disabled={loading}
-              required
-            />
-          </div>
+            <div className="login-input-box">
+              <User className="login-input-icon" size={18} />
+              <input
+                type="text"
+                placeholder="Username"
+                className="login-input-field"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
 
-          <div 
-            className="animate-fade-in delay-200"
-            style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              fontSize: '0.875rem'
-            }}
-          >
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
-              <input type="checkbox" style={{ accentColor: 'var(--primary)' }} disabled={loading} />
-              Remember me
-            </label>
+            <div className="login-input-box">
+              <Lock className="login-input-icon" size={18} />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Password"
+                className="login-input-field"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                required
+              />
+              <button
+                type="button"
+                className="login-password-toggle"
+                onClick={() => setShowPassword(p => !p)}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            <div className="login-input-box">
+              <Building className="login-input-icon" size={18} />
+              <input
+                type="text"
+                placeholder="Hotel ID"
+                className="login-input-field"
+                value={hotelId}
+                onChange={(e) => setHotelId(e.target.value)}
+                disabled={loading}
+                required
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', marginBottom: '1.5rem', marginTop: '0.5rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', color: '#cbd5e1', fontWeight: 400 }}>
+                <input type="checkbox" style={{ accentColor: '#f59e0b', borderRadius: '4px', width: '14px', height: '14px' }} disabled={loading} />
+                Remember me
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowRegisterModal(true);
+                  setRegisterError('');
+                  setRegisterSuccess('');
+                }}
+                style={{ background: 'none', border: 'none', color: '#f59e0b', fontWeight: 600, cursor: 'pointer', padding: 0, textDecoration: 'none', fontSize: 'inherit' }}
+              >
+                Register hotel
+              </button>
+            </div>
+
             <button
-              type="button"
-              onClick={() => {
-                setShowRegisterModal(true);
-                setRegisterError('');
-                setRegisterSuccess('');
-              }}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: 'var(--primary)',
-                textDecoration: 'underline',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                padding: 0,
-                fontSize: '0.875rem'
-              }}
+              type="submit"
+              className="login-btn-orange"
               disabled={loading}
             >
-              Register hotel
+              {loading ? 'Signing In...' : 'Sign In \u2192'}
             </button>
-          </div>
+          </form>
 
-          <button 
-            type="submit" 
-            className="btn-primary animate-fade-in delay-300"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginTop: '0.5rem', opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
-            disabled={loading}
-          >
-            {loading ? 'Signing In...' : 'Sign In'}
-            {!loading && <ArrowRight size={18} />}
-          </button>
-        </form>
-        
-        <div style={{ marginTop: '1.5rem', textAlign: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
-          <p style={{ fontSize: '0.65rem', color: '#a0aec0', margin: 0, fontWeight: 600 }}>
-            Powered by <span style={{ color: 'var(--primary)', fontWeight: 800 }}>WayToIT</span>
-          </p>
+          <div style={{ textAlign: 'center', marginTop: '2rem', fontSize: '0.75rem', color: '#94a3b8', fontWeight: 500 }}>
+            Powered by <span style={{ color: '#f59e0b', fontWeight: 700 }}>WayToIT</span>
+          </div>
         </div>
       </div>
 
       {showRegisterModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
           <div className="glass-panel" style={{ width: '100%', maxWidth: '640px', background: 'rgba(8, 10, 20, 0.95)', borderRadius: '1.5rem', overflow: 'hidden', maxHeight: '92vh', boxShadow: '0 40px 90px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.16)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)' }}>
+
             <div style={{ position: 'sticky', top: 0, left: 0, right: 0, background: 'rgba(8, 10, 20, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)', zIndex: 2, padding: '1.5rem 1.75rem 1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
                 <div>
-                  <h2 style={{ margin: 0, fontSize: '1.4rem', letterSpacing: '-0.03em' }}>Register Hotel</h2>
+                  <h2 style={{ margin: 0, fontSize: '1.4rem', letterSpacing: '-0.03em', color: 'white' }}>Register Hotel</h2>
                   <p style={{ margin: '0.35rem 0 0', color: 'var(--text-muted)', fontSize: '0.95rem' }}>Create a hotel using the backend service.</p>
                 </div>
                 <button type="button" onClick={closeRegisterModal} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '999px', width: '2.75rem', height: '2.75rem', cursor: 'pointer', fontSize: '1.3rem', lineHeight: 1 }}>
@@ -555,7 +676,7 @@ const Login = () => {
                           onError={(e) => { e.currentTarget.style.display = 'none'; }}
                         />
                       ) : (
-                        <Image className="input-icon" size={18} />
+                        <Image className="input-icon" size={10} />
                       )}
                       <input
                         type="url"

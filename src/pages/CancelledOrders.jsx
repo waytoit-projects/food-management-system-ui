@@ -6,6 +6,25 @@ import {
 import { getCancelledOrders } from '../services/orderService';
 import { useTheme } from '../context/ThemeContext';
 
+const monthsList = [
+  'January', 'February', 'March', 'April', 'May', 'June', 
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const formatDateString = (dateStr) => {
+  if (!dateStr) return 'N/A';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const year = parts[0];
+    const monthIndex = parseInt(parts[1], 10) - 1;
+    const day = parts[2];
+    const monthLabel = monthsList[monthIndex]?.substring(0, 3) || parts[1];
+    return `${day} ${monthLabel} ${year}`;
+  }
+  return dateStr;
+};
+
+
 const AwesomeDatePicker = ({ selectedDate, onSelect, maxDate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date(selectedDate));
@@ -53,7 +72,7 @@ const AwesomeDatePicker = ({ selectedDate, onSelect, maxDate }) => {
         onMouseOut={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)'}
       >
         <CalendarIcon size={16} style={{ marginRight: '0.5rem' }} />
-        <span>{new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+        <span>{formatDateString(selectedDate)}</span>
       </div>
       
       {isOpen && (
@@ -190,7 +209,7 @@ const CancelledOrders = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [selectedDate]); // Re-fetch on date change
 
   const handleSort = (key) => {
     let direction = 'asc';
@@ -199,7 +218,7 @@ const CancelledOrders = () => {
   };
 
   const stats = useMemo(() => {
-    const cancelled = ordersData.filter(o => o.orderStatus === 'CANCELLED');
+    const cancelled = ordersData.filter(o => o.orderStatus?.toUpperCase() === 'CANCELLED');
     const uniqueIds = new Set(cancelled.map(o => o.orderId));
     
     return {

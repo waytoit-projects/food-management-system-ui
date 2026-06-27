@@ -4,9 +4,11 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import AuthLayout from '../layouts/AuthLayout';
 import MainLayout from '../layouts/MainLayout';
 import ProtectedRoute from './ProtectedRoute';
+import PublicRoute from './PublicRoute';
 
 import Login from '../pages/Login';
 import Menu from '../pages/Menu';
+import Home from '../pages/Home';
 import ItemManagement from '../pages/ItemManagement';
 import UserManagement from '../pages/UserManagement';
 import HotelManagement from '../pages/HotelManagement';
@@ -22,8 +24,10 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Public Routes */}
-      <Route element={<AuthLayout />}>
-        <Route path="/login" element={<Login />} />
+      <Route element={<PublicRoute />}>
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<Login />} />
+        </Route>
       </Route>
 
       {/* Protected Routes */}
@@ -32,6 +36,15 @@ const AppRoutes = () => {
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<Menu />} />
           <Route path="/menu" element={<Menu />} />
+          <Route path="/dashboard" element={<Home />} />
+          <Route path="/report" element={<Home />} />
+          
+          {/* Redirects/Aliases for requested private routes */}
+          <Route path="/analytics" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/orders" element={<Navigate to="/order-management/all" replace />} />
+          <Route path="/items" element={<Navigate to="/item-management" replace />} />
+          <Route path="/bill-management" element={<Navigate to="/bill-management/daywisebills" replace />} />
+          
           <Route path="/item-management" element={<ItemManagement />} />
           <Route path="/user-management" element={<UserManagement />} />
           <Route path="/hotel-management" element={<HotelManagement />} />

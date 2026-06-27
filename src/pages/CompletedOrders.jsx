@@ -6,6 +6,24 @@ import {
 import { getCompletedOrders } from '../services/orderService';
 import { useTheme } from '../context/ThemeContext';
 
+const monthsList = [
+  'January', 'February', 'March', 'April', 'May', 'June', 
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const formatDateString = (dateStr) => {
+  if (!dateStr) return 'N/A';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const year = parts[0];
+    const monthIndex = parseInt(parts[1], 10) - 1;
+    const day = parts[2];
+    const monthLabel = monthsList[monthIndex]?.substring(0, 3) || parts[1];
+    return `${day} ${monthLabel} ${year}`;
+  }
+  return dateStr;
+};
+
 const AwesomeDatePicker = ({ selectedDate, onSelect, maxDate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date(selectedDate));
@@ -53,7 +71,7 @@ const AwesomeDatePicker = ({ selectedDate, onSelect, maxDate }) => {
         onMouseOut={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
       >
         <CalendarIcon size={16} style={{ marginRight: '0.5rem' }} />
-        <span>{new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+        <span>{formatDateString(selectedDate)}</span>
       </div>
       
       {isOpen && (
@@ -207,7 +225,7 @@ const CompletedOrders = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, []); // Initial load
+  }, [selectedDate]); // Re-fetch on date change
 
   const handleSort = (key) => {
     let direction = 'asc';
@@ -219,7 +237,7 @@ const CompletedOrders = () => {
 
   // Derived stats
   const totalCompletedOrders = useMemo(() => {
-    const uniqueOrders = new Set(ordersData.filter(o => o.orderStatus === 'COMPLETED').map(o => o.orderId));
+    const uniqueOrders = new Set(ordersData.filter(o => o.orderStatus?.toUpperCase() === 'COMPLETED').map(o => o.orderId));
     return uniqueOrders.size;
   }, [ordersData]);
 

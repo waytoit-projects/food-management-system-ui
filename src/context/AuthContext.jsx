@@ -19,6 +19,27 @@ export const AuthProvider = ({ children }) => {
   // isLoading is false immediately since we read auth from localStorage synchronously
   const [isLoading] = useState(false);
 
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      try {
+        const response = await originalFetch(...args);
+        if (response.status === 401 || response.status === 403) {
+          const url = typeof args[0] === 'string' ? args[0] : args[0]?.url || '';
+          if (!url.includes('/login')) {
+            logout();
+          }
+        }
+        return response;
+      } catch (error) {
+        throw error;
+      }
+    };
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, []);
+
   const login = async (username, password, hotelId) => {
     setLoading(true);
     try {

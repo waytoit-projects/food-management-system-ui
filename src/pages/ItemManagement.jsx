@@ -96,12 +96,12 @@ const ItemManagement = () => {
       newErrors.sellingPrice = 'Selling Price must be greater than 0';
     }
     
-    // NGST %
+    // CSGT %
     const ngstPercentage = parseFloat(data.ngstPercentage);
     if (data.ngstPercentage === '' || isNaN(ngstPercentage)) {
-      newErrors.ngstPercentage = 'NGST % is required';
+      newErrors.ngstPercentage = 'CSGT % is required';
     } else if (ngstPercentage < 0 || ngstPercentage > 100) {
-      newErrors.ngstPercentage = 'NGST % must be between 0 and 100';
+      newErrors.ngstPercentage = 'CSGT % must be between 0 and 100';
     }
     
     // SGST %
@@ -183,6 +183,32 @@ const ItemManagement = () => {
     });
   };
 
+  // Build a clean numeric payload for the backend.
+  // totalAmount = sellingPrice + gstAmount (NOT just sellingPrice).
+  const buildItemPayload = (data) => {
+    const sellingPrice   = parseFloat(data.sellingPrice)   || 0;
+    const ngstAmount     = parseFloat(data.ngstAmount)     || 0;
+    const sgstAmount     = parseFloat(data.sgstAmount)     || 0;
+    const gstAmount      = parseFloat(data.gstAmount)      || (ngstAmount + sgstAmount);
+    const totalAmount    = sellingPrice + gstAmount;         // selling + GST
+
+    return {
+      ...data,
+      costPrice:        parseFloat(data.costPrice)        || 0,
+      sellingPrice,
+      ngstPercentage:   parseFloat(data.ngstPercentage)   || 0,
+      ngstAmount,
+      sgstPercentage:   parseFloat(data.sgstPercentage)   || 0,
+      sgstAmount,
+      gstPercentage:    parseFloat(data.gstPercentage)    || 0,
+      gstAmount,
+      totalAmount,                                          // sellingPrice + gstAmount
+      stockQuantity:    parseFloat(data.stockQuantity)    || 0,
+      minStockAlert:    parseFloat(data.minStockAlert)    || 0,
+      preparationTime:  parseFloat(data.preparationTime)  || 0,
+    };
+  };
+
   const openEditModal = (item) => {
     setSelectedItem(item);
     
@@ -233,7 +259,8 @@ const ItemManagement = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await updateFoodItem(editFormData);
+      const payload = buildItemPayload(editFormData);
+      const response = await updateFoodItem(payload);
       if (response.success) {
         setMessage({ type: 'success', text: 'Food item updated successfully!' });
         fetchFoodItems();
@@ -282,7 +309,7 @@ const ItemManagement = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['SL No', 'Code', 'Name', 'Main Category', 'Sub Category', 'Brand', 'Type', 'Veg', 'Cost Price', 'Selling Price', 'NGST %', 'NGST Amount', 'SGST %', 'SGST Amount', 'Total GST %', 'Total GST Amount', 'Total Amount', 'HSN Code', 'Stock', 'Min Alert', 'Prep Time', 'Spicy Level', 'Available', 'Active', 'Description'];
+    const headers = ['SL No', 'Code', 'Name', 'Main Category', 'Sub Category', 'Brand', 'Type', 'Veg', 'Cost Price', 'Selling Price', 'CSGT %', 'CSGT Amount', 'SGST %', 'SGST Amount', 'Total GST %', 'Total GST Amount', 'Total Amount', 'HSN Code', 'Stock', 'Min Alert', 'Prep Time', 'Spicy Level', 'Available', 'Active', 'Description'];
     const csvContent = [
       headers.join(','),
       ...sortedAndFilteredItems.map((item, index) => [
@@ -348,7 +375,8 @@ const ItemManagement = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await createFoodItem(formData);
+      const payload = buildItemPayload(formData);
+      const response = await createFoodItem(payload);
       if (response.success) {
         setMessage({ type: 'success', text: response.message });
         setFormData(initialFormState);
@@ -467,6 +495,7 @@ const ItemManagement = () => {
                     <select name="mainCategory" value={formData.mainCategory} onChange={(e) => handleFormChange(e, false)} style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.1)', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', fontSize: '0.9rem' }}>
                       <option value="Food" style={{ backgroundColor: '#1a1f37' }}>Food</option>
                       <option value="Dishes" style={{ backgroundColor: '#1a1f37' }}>Dishes</option>
+                      <option value="Curry" style={{ backgroundColor: '#1a1f37' }}>Curry</option>
                       <option value="Burger" style={{ backgroundColor: '#1a1f37' }}>Burger</option>
                       <option value="Snacks" style={{ backgroundColor: '#1a1f37' }}>Snacks</option>
                       <option value="Drink & Ice" style={{ backgroundColor: '#1a1f37' }}>Drink & Ice</option>
@@ -528,7 +557,7 @@ const ItemManagement = () => {
                     {errors.sellingPrice && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{errors.sellingPrice}</span>}
                   </div>
                   <div className="form-group">
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#a0aec0' }}>NGST Percentage (%) *</label>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#a0aec0' }}>CSGT Percentage (%) *</label>
                     <input type="number" name="ngstPercentage" value={formData.ngstPercentage} onChange={(e) => handleFormChange(e, false)} placeholder="0.00" style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: `1px solid ${errors.ngstPercentage ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}`, fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', outlineColor: 'var(--primary)' }} />
                     {errors.ngstPercentage && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{errors.ngstPercentage}</span>}
                   </div>
@@ -538,7 +567,7 @@ const ItemManagement = () => {
                     {errors.sgstPercentage && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{errors.sgstPercentage}</span>}
                   </div>
                   <div className="form-group">
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#64748b' }}>NGST Amount (₹)</label>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.6rem', color: '#64748b' }}>CSGT Amount (₹)</label>
                     <input type="text" name="ngstAmount" value={formData.ngstAmount} readOnly style={{ width: '100%', padding: '0.9rem 1.25rem', borderRadius: '1.25rem', border: '1px solid rgba(255, 255, 255, 0.05)', fontSize: '0.9rem', backgroundColor: 'rgba(255, 255, 255, 0.03)', color: '#94a3b8', cursor: 'not-allowed' }} />
                   </div>
                   <div className="form-group">
@@ -702,8 +731,8 @@ const ItemManagement = () => {
                       { label: 'Unit Type', key: 'unit' },
                       { label: 'Cost Price', key: 'costPrice' },
                       { label: 'Selling Price', key: 'sellingPrice' },
-                      { label: 'NGST %', key: 'ngstPercentage' },
-                      { label: 'NGST Amt', key: 'ngstAmount' },
+                      { label: 'CSGT %', key: 'ngstPercentage' },
+                      { label: 'CSGT Amt', key: 'ngstAmount' },
                       { label: 'SGST %', key: 'sgstPercentage' },
                       { label: 'SGST Amt', key: 'sgstAmount' },
                       { label: 'Total GST %', key: 'gstPercentage' },
@@ -909,6 +938,7 @@ const ItemManagement = () => {
                     <select name="mainCategory" value={editFormData.mainCategory} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.1)', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', fontSize: '0.9rem' }}>
                       <option value="Food" style={{ backgroundColor: '#1a1f37' }}>Food</option>
                       <option value="Dishes" style={{ backgroundColor: '#1a1f37' }}>Dishes</option>
+                      <option value="Curry" style={{ backgroundColor: '#1a1f37' }}>Curry</option>
                       <option value="Burger" style={{ backgroundColor: '#1a1f37' }}>Burger</option>
                       <option value="Snacks" style={{ backgroundColor: '#1a1f37' }}>Snacks</option>
                       <option value="Drink & Ice" style={{ backgroundColor: '#1a1f37' }}>Drink & Ice</option>
@@ -968,7 +998,7 @@ const ItemManagement = () => {
                     {editErrors.sellingPrice && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{editErrors.sellingPrice}</span>}
                   </div>
                   <div className="form-group">
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>NGST Percentage (%) *</label>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#a0aec0' }}>CSGT Percentage (%) *</label>
                     <input type="number" name="ngstPercentage" value={editFormData.ngstPercentage} onChange={(e) => handleFormChange(e, true)} style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: `1px solid ${editErrors.ngstPercentage ? '#ef4444' : 'rgba(255, 255, 255, 0.1)'}`, fontSize: '0.9rem', backgroundColor: 'rgba(0, 0, 0, 0.2)', color: 'white', outlineColor: 'var(--primary)' }} />
                     {editErrors.ngstPercentage && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{editErrors.ngstPercentage}</span>}
                   </div>
@@ -978,7 +1008,7 @@ const ItemManagement = () => {
                     {editErrors.sgstPercentage && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.3rem', display: 'block' }}>{editErrors.sgstPercentage}</span>}
                   </div>
                   <div className="form-group">
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#64748b' }}>NGST Amount (₹)</label>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 700, marginBottom: '0.5rem', color: '#64748b' }}>CSGT Amount (₹)</label>
                     <input type="text" name="ngstAmount" value={editFormData.ngstAmount} readOnly style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.05)', fontSize: '0.9rem', backgroundColor: 'rgba(255, 255, 255, 0.03)', color: '#94a3b8', cursor: 'not-allowed' }} />
                   </div>
                   <div className="form-group">

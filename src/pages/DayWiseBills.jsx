@@ -15,6 +15,24 @@ import { useAuth } from '../context/AuthContext';
 
 const COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
 
+const monthsList = [
+  'January', 'February', 'March', 'April', 'May', 'June', 
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const formatDateString = (dateStr) => {
+  if (!dateStr) return 'N/A';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const year = parts[0];
+    const monthIndex = parseInt(parts[1], 10) - 1;
+    const day = parts[2];
+    const monthLabel = monthsList[monthIndex]?.substring(0, 3) || parts[1];
+    return `${day} ${monthLabel} ${year}`;
+  }
+  return dateStr;
+};
+
 const AwesomeDatePicker = ({ selectedDate, onSelect, maxDate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date(selectedDate));
@@ -56,7 +74,7 @@ const AwesomeDatePicker = ({ selectedDate, onSelect, maxDate }) => {
         className="flex items-center bg-slate-900/80 border border-white/10 rounded-full px-4 py-2 text-indigo-400 font-bold hover:bg-slate-900 transition cursor-pointer select-none"
       >
         <CalendarIcon size={16} className="mr-2" />
-        <span className="text-sm">{new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+        <span className="text-sm">{formatDateString(selectedDate)}</span>
       </div>
       
       {isOpen && (
@@ -210,7 +228,7 @@ const DayWiseBills = () => {
   const orders = useMemo(() => {
     const groups = {};
     filteredItems.forEach(item => {
-      const oid = item.order_id || `ORD-${item.orderDate}-${item.orderTime || ''}-${item.customerName || 'Walk-in'}`;
+      const oid = item.orderId || item.order_id || `ORD-${item.orderDate}-${item.orderTime || ''}-${item.customerName || 'Walk-in'}`;
       if (!groups[oid]) {
         groups[oid] = {
           orderId: oid,
@@ -242,7 +260,7 @@ const DayWiseBills = () => {
 
   // Dashboard Stats (KPIs)
   const stats = useMemo(() => {
-    const completedOrders = orders.filter(o => o.orderStatus === 'COMPLETED');
+    const completedOrders = orders.filter(o => o.orderStatus?.toUpperCase() === 'COMPLETED');
     const totalRevenue = completedOrders.reduce((sum, o) => sum + o.totalAmount, 0);
     const totalBills = completedOrders.length;
     const totalItems = completedOrders.reduce((sum, o) => {
@@ -268,7 +286,7 @@ const DayWiseBills = () => {
     // Item sales sorting to find highest/lowest selling
     const itemSales = {};
     filteredItems.forEach(item => {
-      if (item.orderStatus === 'COMPLETED') {
+      if (item.orderStatus?.toUpperCase() === 'COMPLETED') {
         itemSales[item.itemName] = (itemSales[item.itemName] || 0) + (item.quantity || 0);
       }
     });
@@ -313,7 +331,7 @@ const DayWiseBills = () => {
     });
 
     orders.forEach(o => {
-      if (o.orderStatus === 'COMPLETED') {
+      if (o.orderStatus?.toUpperCase() === 'COMPLETED') {
         const timeParts = o.orderTime?.split(':');
         const hour = timeParts ? parseInt(timeParts[0]) : 0;
         if (hour >= 0 && hour < 24) {
@@ -336,7 +354,7 @@ const DayWiseBills = () => {
   const categoryData = useMemo(() => {
     const cats = {};
     filteredItems.forEach(item => {
-      if (item.orderStatus === 'COMPLETED') {
+      if (item.orderStatus?.toUpperCase() === 'COMPLETED') {
         const cat = item.itemCategory || 'Others';
         cats[cat] = (cats[cat] || 0) + (item.totalAmount || item.sellingAmount || 0);
       }
@@ -349,7 +367,7 @@ const DayWiseBills = () => {
     const types = { 'Dine-In': 0, 'Takeaway': 0, 'Delivery/Online': 0 };
     let totalRev = 0;
     orders.forEach(o => {
-      if (o.orderStatus === 'COMPLETED') {
+      if (o.orderStatus?.toUpperCase() === 'COMPLETED') {
         const type = o.givenType?.toUpperCase() || '';
         let mappedType = 'Delivery/Online';
         if (type === 'DINE_IN' || type === 'DINE IN') mappedType = 'Dine-In';
@@ -369,10 +387,10 @@ const DayWiseBills = () => {
   // Top Selling Items Horizontal Bar Chart Data
   const topSellingData = useMemo(() => {
     const items = {};
-    const totalQty = filteredItems.reduce((sum, i) => sum + (i.orderStatus === 'COMPLETED' ? i.quantity : 0), 0);
+    const totalQty = filteredItems.reduce((sum, i) => sum + (i.orderStatus?.toUpperCase() === 'COMPLETED' ? i.quantity : 0), 0);
     
     filteredItems.forEach(item => {
-      if (item.orderStatus === 'COMPLETED') {
+      if (item.orderStatus?.toUpperCase() === 'COMPLETED') {
         if (!items[item.itemName]) {
           items[item.itemName] = { name: item.itemName, qty: 0, revenue: 0 };
         }
@@ -394,7 +412,7 @@ const DayWiseBills = () => {
   const leastSellingData = useMemo(() => {
     const items = {};
     filteredItems.forEach(item => {
-      if (item.orderStatus === 'COMPLETED') {
+      if (item.orderStatus?.toUpperCase() === 'COMPLETED') {
         if (!items[item.itemName]) {
           items[item.itemName] = { name: item.itemName, qty: 0, revenue: 0 };
         }
@@ -410,7 +428,7 @@ const DayWiseBills = () => {
 
   // Bill Collection Insights & Histogram Data
   const billCollectionInsights = useMemo(() => {
-    const completedOrders = orders.filter(o => o.orderStatus === 'COMPLETED');
+    const completedOrders = orders.filter(o => o.orderStatus?.toUpperCase() === 'COMPLETED');
     const amounts = completedOrders.map(o => o.totalAmount);
     
     const maxBill = amounts.length ? Math.max(...amounts) : 0;
@@ -441,7 +459,7 @@ const DayWiseBills = () => {
   const itemPerformanceData = useMemo(() => {
     const items = {};
     filteredItems.forEach(item => {
-      if (item.orderStatus === 'COMPLETED') {
+      if (item.orderStatus?.toUpperCase() === 'COMPLETED') {
         if (!items[item.itemName]) {
           items[item.itemName] = { name: item.itemName, qty: 0, revenue: 0, category: item.itemCategory };
         }
@@ -486,7 +504,7 @@ const DayWiseBills = () => {
   // Smart Insights Generation
   const smartInsights = useMemo(() => {
     const insights = [];
-    const completedOrders = orders.filter(o => o.orderStatus === 'COMPLETED');
+    const completedOrders = orders.filter(o => o.orderStatus?.toUpperCase() === 'COMPLETED');
     
     if (completedOrders.length === 0) {
       return ['No sales recorded for this date.'];
@@ -895,7 +913,7 @@ const DayWiseBills = () => {
                   <span className="text-lg font-black text-white">₹{stats.totalGst.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs text-slate-400 mb-1">
-                  <span>NGST</span>
+                  <span>CSGT</span>
                   <span className="font-semibold text-slate-300">₹{stats.totalNgst.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs text-slate-400">

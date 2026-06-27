@@ -238,7 +238,7 @@ const PendingOrders = () => {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '1.5rem' }}>
           {filteredOrders.map(order => {
-            const allCompleted = order.items.every(i => i.orderStatus === 'COMPLETED');
+            const allCompleted = order.items.every(i => i.orderStatus?.toUpperCase() === 'COMPLETED');
             const displayStatus = allCompleted ? 'COMPLETED' : 'PENDING';
             const statusStyle = getStatusColor(displayStatus);
 

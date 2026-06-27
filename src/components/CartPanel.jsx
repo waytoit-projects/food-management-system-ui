@@ -27,6 +27,10 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
   });
   const [orderStatus, setOrderStatus] = useState('PENDING');
 
+  // Unit price shown to customer = totalAmount (selling + GST), fallback to sellingPrice + gstAmount
+  const getUnitDisplayPrice = (item) =>
+    Number(item.totalAmount || (Number(item.sellingPrice || 0) + Number(item.gstAmount || 0)));
+
   const subtotal = cartItems.reduce((sum, item) => sum + (Number(item.sellingPrice || 0) * item.qty), 0);
   const gst = cartItems.reduce((sum, item) => {
     // Prefer API-provided gstAmount (per unit), scale by qty
@@ -48,7 +52,8 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
     return sum + ((itemGst / 2) * item.qty);
   }, 0);
   const deliveryCharge = orderType === 'Delivery' ? 5.00 : 0;
-  const total = subtotal + gst + deliveryCharge;
+  // Display total uses totalAmount per item (incl. GST) × qty
+  const total = cartItems.reduce((sum, item) => sum + (getUnitDisplayPrice(item) * item.qty), 0) + deliveryCharge;
 
   const [showEmptyCartWarning, setShowEmptyCartWarning] = useState(false);
 
@@ -252,7 +257,10 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
                       <div>
                         <h4 style={{ fontSize: '0.75rem', fontWeight: 700, margin: 0, lineHeight: '1.1' }}>{item.itemName}</h4>
                         <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
-                          ₹{Number(item.sellingPrice || 0).toFixed(2)} x {item.qty} = <span style={{ color: 'var(--text-main)', fontWeight: 700, marginLeft: '0.2rem' }}>₹{(Number(item.sellingPrice || 0) * item.qty).toFixed(2)}</span>
+                          {(() => {
+                            const unitPrice = Number(item.totalAmount || (Number(item.sellingPrice || 0) + Number(item.gstAmount || 0)));
+                            return <>₹{unitPrice.toFixed(2)} x {item.qty} = <span style={{ color: 'var(--text-main)', fontWeight: 700, marginLeft: '0.2rem' }}>₹{(unitPrice * item.qty).toFixed(2)}</span></>;
+                          })()}
                         </div>
                       </div>
                       
@@ -284,7 +292,7 @@ const CartPanel = ({ cartItems, onAdd, onRemove, onClearCart }) => {
               </div>
               {totalNgst > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.65rem', paddingLeft: '0.5rem' }}>
-                  <span>├─ NGST</span>
+                  <span>├─ CSGT</span>
                   <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>₹{totalNgst.toFixed(2)}</span>
                 </div>
               )}

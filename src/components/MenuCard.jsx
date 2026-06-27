@@ -28,7 +28,18 @@ const MenuCard = ({ item, cartQty, onAdd, onRemove }) => {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-        <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)' }}>₹{Number(item.sellingPrice || 0).toFixed(2)}</span>
+        {/* Price: show totalAmount (selling + GST), fallback to sellingPrice */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+          <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)' }}>
+            ₹{Number(
+                item.totalAmount ||
+                (Number(item.sellingPrice || 0) + Number(item.gstAmount || 0))
+              ).toFixed(2)}
+          </span>
+          {Number(item.gstAmount || item.gstPercentage) > 0 && (
+            <span style={{ fontSize: '0.55rem', color: '#64748b', fontWeight: 500 }}>incl. GST</span>
+          )}
+        </div>
         
         {cartQty > 0 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: '2rem', padding: '0.25rem' }}>

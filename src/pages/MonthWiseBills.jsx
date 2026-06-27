@@ -31,6 +31,25 @@ const monthsList = [
 
 const yearsList = [2024, 2025, 2026, 2027];
 
+const getDayFromDateStr = (dateStr) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  return parts.length === 3 ? parseInt(parts[2], 10) : '';
+};
+
+const formatDateString = (dateStr) => {
+  if (!dateStr) return 'N/A';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const year = parts[0];
+    const monthIndex = parseInt(parts[1], 10) - 1;
+    const day = parts[2];
+    const monthLabel = monthsList[monthIndex]?.label?.substring(0, 3) || parts[1];
+    return `${day} ${monthLabel} ${year}`;
+  }
+  return dateStr;
+};
+
 const MonthWiseBills = () => {
   const { user } = useAuth();
   
@@ -145,22 +164,25 @@ const MonthWiseBills = () => {
   const mapToOrders = (itemsList) => {
     const groups = {};
     itemsList.forEach(item => {
-      const oid = item.orderId ?? item.order_id ?? `ORD-${item.orderDate}-${item.orderTime || ''}-${item.customerName || 'Walk-in'}`;
-      if (!groups[oid]) {
-        groups[oid] = {
-          orderId: oid,
-          orderDate: item.orderDate,
+      const dateStr = item.orderDate ?? item.order_date ?? '';
+      const orderIdVal = item.orderId ?? item.order_id ?? `ORD-${dateStr}-${item.orderTime || ''}-${item.customerName || 'Walk-in'}`;
+      const groupKey = `${dateStr}_${orderIdVal}`;
+      
+      if (!groups[groupKey]) {
+        groups[groupKey] = {
+          orderId: orderIdVal,
+          orderDate: dateStr,
           orderStatus: item.orderStatus || 'COMPLETED',
           givenType: item.givenType || 'DINE_IN',
           totalAmount: 0,
           items: []
         };
       }
-      groups[oid].items.push(item);
-      groups[oid].totalAmount += item.totalAmount || item.sellingAmount || 0;
-      groups[oid].gstAmount = (groups[oid].gstAmount || 0) + (item.gstAmount || 0);
-      groups[oid].ngstAmount = (groups[oid].ngstAmount || 0) + (item.ngstAmount || 0);
-      groups[oid].sgstAmount = (groups[oid].sgstAmount || 0) + (item.sgstAmount || 0);
+      groups[groupKey].items.push(item);
+      groups[groupKey].totalAmount += item.totalAmount || item.sellingAmount || 0;
+      groups[groupKey].gstAmount = (groups[groupKey].gstAmount || 0) + (item.gstAmount || 0);
+      groups[groupKey].ngstAmount = (groups[groupKey].ngstAmount || 0) + (item.ngstAmount || 0);
+      groups[groupKey].sgstAmount = (groups[groupKey].sgstAmount || 0) + (item.sgstAmount || 0);
     });
     return Object.values(groups);
   };
@@ -170,13 +192,13 @@ const MonthWiseBills = () => {
 
   // Monthly stats calculations
   const stats = useMemo(() => {
-    const completedCurrent = currentOrders.filter(o => o.orderStatus === 'COMPLETED');
-    const completedPrev = prevOrders.filter(o => o.orderStatus === 'COMPLETED');
+    const completedCurrent = currentOrders.filter(o => o.orderStatus?.toUpperCase() === 'COMPLETED');
+    const completedPrev = prevOrders.filter(o => o.orderStatus?.toUpperCase() === 'COMPLETED');
 
     const totalRevenue = completedCurrent.reduce((sum, o) => sum + o.totalAmount, 0);
     const prevRevenue = completedPrev.reduce((sum, o) => sum + o.totalAmount, 0);
     const totalBills = completedCurrent.length;
-    const totalItems = filteredCurrentItems.filter(i => i.orderStatus === 'COMPLETED').reduce((sum, i) => sum + (i.quantity || 0), 0);
+    const totalItems = filteredCurrentItems.filter(i => i.orderStatus?.toUpperCase() === 'COMPLETED').reduce((sum, i) => sum + (i.quantity || 0), 0);
 
     const totalGst = completedCurrent.reduce((sum, o) => sum + (o.gstAmount || 0), 0);
     const totalNgst = completedCurrent.reduce((sum, o) => sum + (o.ngstAmount || 0), 0);
@@ -197,15 +219,15 @@ const MonthWiseBills = () => {
     let lowestDay = 'N/A';
     if (dailyEntries.length > 0) {
       dailyEntries.sort((a, b) => b[1] - a[1]);
-      bestDay = `${new Date(dailyEntries[0][0]).getDate()} ${monthsList[selectedMonth].label} (₹${dailyEntries[0][1].toFixed(0)})`;
-      lowestDay = `${new Date(dailyEntries[dailyEntries.length - 1][0]).getDate()} ${monthsList[selectedMonth].label} (₹${dailyEntries[dailyEntries.length - 1][1].toFixed(0)})`;
+      bestDay = `${getDayFromDateStr(dailyEntries[0][0])} ${monthsList[selectedMonth].label} (₹${dailyEntries[0][1].toFixed(0)})`;
+      lowestDay = `${getDayFromDateStr(dailyEntries[dailyEntries.length - 1][0])} ${monthsList[selectedMonth].label} (₹${dailyEntries[dailyEntries.length - 1][1].toFixed(0)})`;
     }
 
     // Best selling item & category
     const itemSalesQty = {};
     const catSalesRev = {};
     filteredCurrentItems.forEach(item => {
-      if (item.orderStatus === 'COMPLETED') {
+      if (item.orderStatus?.toUpperCase() === 'COMPLETED') {
         itemSalesQty[item.itemName] = (itemSalesQty[item.itemName] || 0) + (item.quantity || 0);
         catSalesRev[item.itemCategory] = (catSalesRev[item.itemCategory] || 0) + (item.totalAmount || item.sellingAmount || 0);
       }
@@ -254,9 +276,8 @@ const MonthWiseBills = () => {
     });
 
     currentOrders.forEach(o => {
-      if (o.orderStatus === 'COMPLETED') {
-        const dateObj = new Date(o.orderDate);
-        const day = dateObj.getDate();
+      if (o.orderStatus?.toUpperCase() === 'COMPLETED') {
+        const day = getDayFromDateStr(o.orderDate);
         if (day >= 1 && day <= daysInMonth) {
           data[day - 1].revenue += o.totalAmount;
           data[day - 1].orders += 1;
@@ -277,12 +298,14 @@ const MonthWiseBills = () => {
     ];
 
     currentOrders.forEach(o => {
-      if (o.orderStatus === 'COMPLETED') {
-        const day = new Date(o.orderDate).getDate();
-        if (day <= 7) weeks[0].revenue += o.totalAmount;
-        else if (day <= 14) weeks[1].revenue += o.totalAmount;
-        else if (day <= 21) weeks[2].revenue += o.totalAmount;
-        else weeks[3].revenue += o.totalAmount;
+      if (o.orderStatus?.toUpperCase() === 'COMPLETED') {
+        const day = getDayFromDateStr(o.orderDate);
+        if (day) {
+          if (day <= 7) weeks[0].revenue += o.totalAmount;
+          else if (day <= 14) weeks[1].revenue += o.totalAmount;
+          else if (day <= 21) weeks[2].revenue += o.totalAmount;
+          else weeks[3].revenue += o.totalAmount;
+        }
       }
     });
 
@@ -299,22 +322,26 @@ const MonthWiseBills = () => {
     ];
 
     currentOrders.forEach(o => {
-      if (o.orderStatus === 'COMPLETED') {
-        const day = new Date(o.orderDate).getDate();
-        if (day <= 7) data[0].current += o.totalAmount;
-        else if (day <= 14) data[1].current += o.totalAmount;
-        else if (day <= 21) data[2].current += o.totalAmount;
-        else data[3].current += o.totalAmount;
+      if (o.orderStatus?.toUpperCase() === 'COMPLETED') {
+        const day = getDayFromDateStr(o.orderDate);
+        if (day) {
+          if (day <= 7) data[0].current += o.totalAmount;
+          else if (day <= 14) data[1].current += o.totalAmount;
+          else if (day <= 21) data[2].current += o.totalAmount;
+          else data[3].current += o.totalAmount;
+        }
       }
     });
 
     prevOrders.forEach(o => {
-      if (o.orderStatus === 'COMPLETED') {
-        const day = new Date(o.orderDate).getDate();
-        if (day <= 7) data[0].previous += o.totalAmount;
-        else if (day <= 14) data[1].previous += o.totalAmount;
-        else if (day <= 21) data[2].previous += o.totalAmount;
-        else data[3].previous += o.totalAmount;
+      if (o.orderStatus?.toUpperCase() === 'COMPLETED') {
+        const day = getDayFromDateStr(o.orderDate);
+        if (day) {
+          if (day <= 7) data[0].previous += o.totalAmount;
+          else if (day <= 14) data[1].previous += o.totalAmount;
+          else if (day <= 21) data[2].previous += o.totalAmount;
+          else data[3].previous += o.totalAmount;
+        }
       }
     });
 
@@ -325,7 +352,7 @@ const MonthWiseBills = () => {
   const dailyReportTable = useMemo(() => {
     const report = {};
     currentOrders.forEach(o => {
-      if (o.orderStatus === 'COMPLETED') {
+      if (o.orderStatus?.toUpperCase() === 'COMPLETED') {
         if (!report[o.orderDate]) {
           report[o.orderDate] = { date: o.orderDate, orders: 0, revenue: 0 };
         }
@@ -340,7 +367,7 @@ const MonthWiseBills = () => {
   const categoryData = useMemo(() => {
     const cats = {};
     filteredCurrentItems.forEach(item => {
-      if (item.orderStatus === 'COMPLETED') {
+      if (item.orderStatus?.toUpperCase() === 'COMPLETED') {
         const cat = item.itemCategory || 'Others';
         if (!cats[cat]) {
           cats[cat] = { name: cat, value: 0, qty: 0 };
@@ -356,7 +383,7 @@ const MonthWiseBills = () => {
   const top10Data = useMemo(() => {
     const items = {};
     filteredCurrentItems.forEach(item => {
-      if (item.orderStatus === 'COMPLETED') {
+      if (item.orderStatus?.toUpperCase() === 'COMPLETED') {
         if (!items[item.itemName]) {
           items[item.itemName] = { name: item.itemName, qty: 0, revenue: 0 };
         }
@@ -371,7 +398,7 @@ const MonthWiseBills = () => {
   const bottom10Data = useMemo(() => {
     const items = {};
     filteredCurrentItems.forEach(item => {
-      if (item.orderStatus === 'COMPLETED') {
+      if (item.orderStatus?.toUpperCase() === 'COMPLETED') {
         if (!items[item.itemName]) {
           items[item.itemName] = { name: item.itemName, qty: 0, revenue: 0 };
         }
@@ -385,7 +412,7 @@ const MonthWiseBills = () => {
   // Monthly Business Insights
   const monthlyInsights = useMemo(() => {
     const insights = [];
-    const completedCurrent = currentOrders.filter(o => o.orderStatus === 'COMPLETED');
+    const completedCurrent = currentOrders.filter(o => o.orderStatus?.toUpperCase() === 'COMPLETED');
     
     if (completedCurrent.length === 0) {
       return ['No sales recorded for this month.'];
@@ -398,7 +425,13 @@ const MonthWiseBills = () => {
     // 2. High performing day of week
     const weekdaySales = {};
     completedCurrent.forEach(o => {
-      const dayIndex = new Date(o.orderDate).getDay();
+      let dayIndex = 0;
+      if (o.orderDate) {
+        const parts = o.orderDate.split('-');
+        if (parts.length === 3) {
+          dayIndex = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)).getDay();
+        }
+      }
       const dayNames = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
       const dayName = dayNames[dayIndex];
       weekdaySales[dayName] = (weekdaySales[dayName] || 0) + o.totalAmount;
@@ -633,7 +666,7 @@ const MonthWiseBills = () => {
                     <span className="text-lg font-black text-white">₹{stats.totalGst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs text-slate-400 mb-1">
-                    <span>NGST</span>
+                    <span>CSGT</span>
                     <span className="font-semibold text-slate-300">₹{stats.totalNgst.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex justify-between items-center text-xs text-slate-400">
@@ -790,7 +823,7 @@ const MonthWiseBills = () => {
                   {dailyReportTable.map((row) => (
                     <tr key={row.date} className="hover:bg-white/5 transition">
                       <td className="py-3 px-4 font-bold text-white">
-                        {new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {formatDateString(row.date)}
                       </td>
                       <td className="py-3 px-4 font-bold text-indigo-400">{row.orders}</td>
                       <td className="py-3 px-4 font-bold text-emerald-400">₹{row.revenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>

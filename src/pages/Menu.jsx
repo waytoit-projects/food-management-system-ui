@@ -51,13 +51,17 @@ const Menu = () => {
     }
   };
 
+  // All predefined categories — always shown regardless of whether items exist
+  const PREDEFINED_CATEGORIES = ['Food', 'Dishes', 'Curry', 'Burger', 'Snacks', 'Drink & Ice', 'Desserts', 'Beverages', 'Biryani', 'Starters'];
+
   const categories = useMemo(() => {
-    const cats = new Set();
+    // Merge predefined list with any extra categories from backend data
+    const extra = new Set();
     menuItems.forEach(item => {
       const cat = item.mainCategory || item.category?.mainCategory;
-      if (cat) cats.add(cat);
+      if (cat && !PREDEFINED_CATEGORIES.includes(cat)) extra.add(cat);
     });
-    return ['All', ...Array.from(cats), 'Veg', 'Non-Veg'];
+    return ['All', ...PREDEFINED_CATEGORIES, ...Array.from(extra), 'Veg', 'Non-Veg'];
   }, [menuItems]);
 
   // Filter logic based on search and active tab

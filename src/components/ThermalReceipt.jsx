@@ -116,26 +116,41 @@ const ThermalReceipt = forwardRef(({ orderData, type = 'post' }, ref) => {
       <table className="receipt-table">
         <thead>
           <tr>
-            <th className="text-left" style={{ width: isKOT ? '70%' : '50%' }}>Item</th>
-            <th className="text-center" style={{ width: isKOT ? '30%' : '15%' }}>Qty</th>
-            {!isKOT && <th className="text-right" style={{ width: '35%' }}>Amt</th>}
+            <th className="text-left" style={{ width: isKOT ? '70%' : '45%' }}>Item</th>
+            <th className="text-center" style={{ width: isKOT ? '30%' : '20%' }}>Qty</th>
+            {!isKOT && <th className="text-right" style={{ width: '35%' }}>Total</th>}
           </tr>
         </thead>
         <tbody>
-          {items.map((item, index) => (
-            <React.Fragment key={index}>
-              <tr className="item-row">
-                <td className="text-left">
-                  {item.itemName}
-                  {item.remarks && <div className="notes">Note: {item.remarks}</div>}
-                </td>
-                <td className="text-center" style={{ fontSize: isKOT ? '16px' : 'inherit', fontWeight: isKOT ? '900' : 'inherit' }}>
-                  {item.quantity || item.qty}
-                </td>
-                {!isKOT && <td className="text-right">{Number(item.totalAmount || (Number(item.sellingPrice || 0) * (item.quantity || item.qty || 0))).toFixed(2)}</td>}
-              </tr>
-            </React.Fragment>
-          ))}
+          {items.map((item, index) => {
+            const qty = item.quantity || item.qty || 1;
+            // Unit price = totalAmount (selling + GST) per unit
+            const unitPrice = Number(
+              item.totalAmount ||
+              (Number(item.sellingPrice || 0) + Number(item.gstAmount || 0)) ||
+              Number(item.sellingPrice || 0)
+            );
+            const lineTotal = unitPrice * qty;
+            return (
+              <React.Fragment key={index}>
+                <tr className="item-row">
+                  <td className="text-left">
+                    <div>{item.itemName}</div>
+                    {!isKOT && (
+                      <div style={{ fontSize: '10px', color: '#555', fontWeight: 'normal' }}>
+                        ₹{unitPrice.toFixed(2)} × {qty}
+                      </div>
+                    )}
+                    {item.remarks && <div className="notes">Note: {item.remarks}</div>}
+                  </td>
+                  <td className="text-center" style={{ fontSize: isKOT ? '16px' : 'inherit', fontWeight: isKOT ? '900' : 'inherit' }}>
+                    {qty}
+                  </td>
+                  {!isKOT && <td className="text-right" style={{ fontWeight: 'bold' }}>₹{lineTotal.toFixed(2)}</td>}
+                </tr>
+              </React.Fragment>
+            );
+          })}
         </tbody>
       </table>
 
@@ -148,20 +163,27 @@ const ThermalReceipt = forwardRef(({ orderData, type = 'post' }, ref) => {
             <span>Subtotal:</span>
             <span>₹{Number(subtotal || (totalAmount - gstAmount)).toFixed(2)}</span>
           </div>
-          {gstAmount > 0 && (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>GST:</span>
-                <span>₹{Number(gstAmount).toFixed(2)}</span>
-              </div>
-              {(orderData.ngstAmount > 0 || orderData.sgstAmount > 0) && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px' }}>
-                  <span>(NGST: ₹{Number(orderData.ngstAmount || 0).toFixed(2)})</span>
-                  <span>(SGST: ₹{Number(orderData.sgstAmount || 0).toFixed(2)})</span>
+          {gstAmount > 0 && (() => {
+            // Use provided CGST/SGST amounts; fallback to half of total GST each
+            const cgst = Number(orderData.ngstAmount || (gstAmount / 2));
+            const sgst = Number(orderData.sgstAmount || (gstAmount / 2));
+            return (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3px' }}>
+                  <span>CGST:</span>
+                  <span>₹{cgst.toFixed(2)}</span>
                 </div>
-              )}
-            </>
-          )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px' }}>
+                  <span>SGST:</span>
+                  <span>₹{sgst.toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2px', borderTop: '1px dashed black', paddingTop: '2px' }}>
+                  <span>Total GST:</span>
+                  <span>₹{Number(gstAmount).toFixed(2)}</span>
+                </div>
+              </>
+            );
+          })()}
           {orderData.discountAmount > 0 && (
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Discount:</span>

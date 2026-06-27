@@ -6,6 +6,25 @@ import {
 import { getTakeawayOrders } from '../services/orderService';
 import { useTheme } from '../context/ThemeContext';
 
+const monthsList = [
+  'January', 'February', 'March', 'April', 'May', 'June', 
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+const formatDateString = (dateStr) => {
+  if (!dateStr) return 'N/A';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    const year = parts[0];
+    const monthIndex = parseInt(parts[1], 10) - 1;
+    const day = parts[2];
+    const monthLabel = monthsList[monthIndex]?.substring(0, 3) || parts[1];
+    return `${day} ${monthLabel} ${year}`;
+  }
+  return dateStr;
+};
+
+
 const AwesomeDatePicker = ({ selectedDate, onSelect, maxDate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new Date(selectedDate));
@@ -53,7 +72,7 @@ const AwesomeDatePicker = ({ selectedDate, onSelect, maxDate }) => {
         onMouseOut={(e) => e.currentTarget.style.background = 'rgba(236, 72, 153, 0.1)'}
       >
         <CalendarIcon size={16} style={{ marginRight: '0.5rem' }} />
-        <span>{new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+        <span>{formatDateString(selectedDate)}</span>
       </div>
       
       {isOpen && (
@@ -190,7 +209,7 @@ const TakeawayOrders = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [selectedDate]); // Re-fetch on date change
 
   const handleSort = (key) => {
     let direction = 'asc';
@@ -199,10 +218,10 @@ const TakeawayOrders = () => {
   };
 
   const stats = useMemo(() => {
-    const takeaway = ordersData.filter(o => o.orderStatus === 'COMPLETED' || o.orderStatus === 'CANCELLED'); // Depending on business logic, here we just count what backend returns
+    const takeaway = ordersData.filter(o => o.orderStatus?.toUpperCase() === 'COMPLETED' || o.orderStatus?.toUpperCase() === 'CANCELLED');
     const uniqueIds = new Set(takeaway.map(o => o.orderId));
     
-    const completed = ordersData.filter(o => o.orderStatus === 'COMPLETED');
+    const completed = ordersData.filter(o => o.orderStatus?.toUpperCase() === 'COMPLETED');
     
     return {
       total: uniqueIds.size,
